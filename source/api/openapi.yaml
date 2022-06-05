@@ -1,0 +1,255 @@
+openapi: 3.0.0
+info:
+  title: TeamSpeak 3 - Quick Settings for Steam Deck
+  version: 0.0.1
+servers:
+  - url: http://localhost:8000/api
+
+components:
+  schemas:
+    TS3Server:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Name of the currently connected TeamSpeak 3 server.
+        status:
+          type: integer
+          enum: [0, 1, 2, 3, 4]
+        bookmarks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TS3Bookmark"
+    TS3Bookmark:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Name of the bookmarked TeamSpeak 3 server.
+        uuid:
+          type: string
+          format: uuid
+          description: |
+            Unique id of the bookmarked TeamSpeak 3 server.
+    TS3BookmarkRef:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: |
+            Unique id of the bookmarked TeamSpeak 3 server.
+    TS3DeviceRef:
+      type: object
+      properties:
+        device:
+          type: string
+          enum: ["input", "output"]
+    TS3ChannelRef:
+      type: object
+      properties:
+        channel_id:
+          type: integer
+          description: |
+            ID of the TeamSpeak 3 channel.
+    TS3Event:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["CONNECTION_STATE_CONNECTED", "CONNECTION_STATE_DISCONNECTED", "CLIENT_LIST_CHANGED"]
+    TS3Client:
+      type: object
+      properties:
+        client_id:
+          type: integer
+          description: |
+            ID of this TeamSpeak 3 client.
+        client_nickname:
+          type: string
+          description: |
+            Nickname of this TeamSpeak 3 client.
+        input_muted:
+          type: boolean
+        output_muted:
+          type: boolean
+    TS3ClientWithChannel:
+      type: object
+      properties:
+        client_id:
+          type: integer
+          description: |
+            ID of this TeamSpeak 3 client.
+        client_nickname:
+          type: string
+          description: |
+            Nickname of this TeamSpeak 3 client.
+        input_muted:
+          type: boolean
+        output_muted:
+          type: boolean
+        channel_id:
+          type: integer
+          description: |
+            ID of this TeamSpeak 3 channel.
+        channel_name:
+          type: string
+          description: |
+            Name of this TeamSpeak 3 channel.
+    TS3ChannelWithClients:
+      type: object
+      properties:
+        channel_id:
+          type: integer
+          description: |
+            ID of this TeamSpeak 3 channel.
+        channel_name:
+          type: string
+          description: |
+            Name of this TeamSpeak 3 channel.
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/TS3Client"
+
+paths:
+  /self:
+    get:
+      tags: [self]
+      description: |
+        Returns information about self TeamSpeak 3 client.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TS3Client"
+  /self/mute:
+    post:
+      tags: [self]
+      description: |
+        Mutes input or output of self TeamSpeak 3 client.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/TS3DeviceRef"
+      responses:
+        200:
+          description: ""
+  /self/unmute:
+    post:
+      tags: [self]
+      description: |
+        Unmutes input or output of self TeamSpeak 3 client.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/TS3DeviceRef"
+      responses:
+        200:
+          description: ""
+
+  /server:
+    get:
+      tags: [server]
+      description: |
+        Returns information about the currently connected TeamSpeak 3 server.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TS3Server"
+  /server/connect:
+    post:
+      tags: [server]
+      description: |
+        Connects to a bookmarked TeamSpeak 3 server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+               $ref: "#/components/schemas/TS3BookmarkRef"
+      responses:
+        200:
+          description: ""
+  /server/disconnect:
+    post:
+      tags: [server]
+      description: |
+        Disconnects from the currently connected TeamSpeak 3 server.
+      responses:
+        200:
+          description: ""
+
+  /clients:
+    get:
+      tags: [clients]
+      description: |
+        Returns list of TeamSpeak 3 clients and their currently connected channel.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TS3ClientWithChannel"
+
+  /cursor:
+    get:
+      tags: [cursor]
+      description: |
+        Returns the TeamSpeak 3 channel and all connected clients the cursor currently points to.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TS3ChannelWithClients"
+  /cursor/move:
+    post:
+      tags: [cursor]
+      description: |
+        Change the TeamSpeak 3 channel the cursor is pointing to.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+               $ref: "#/components/schemas/TS3ChannelRef"
+      responses:
+        200:
+          description: ""
+  /cursor/join:
+    post:
+      tags: [cursor]
+      description: |
+        Joins the TeamSpeak 3 channel the cursor is pointing to.
+      responses:
+        200:
+          description: ""
+
+  /events:
+    get:
+      tags: [events]
+      description: |
+        Returns TeamSpeak 3 server events.
+      responses:
+        200:
+          description: ""
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/TS3Event"
