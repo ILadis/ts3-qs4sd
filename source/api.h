@@ -29,6 +29,8 @@ struct mg_handler* mg_handler_move_browser();
 
 struct mg_handler* mg_handler_events();
 
+struct mg_handler* mg_handler_get_audio_outputs();
+
 struct mg_handler* mg_handler_static_resources();
 
 static inline void mg_http_api_response(

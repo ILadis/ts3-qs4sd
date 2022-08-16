@@ -32,6 +32,7 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_get_browser());
   mg_server_add_handler(&server, mg_handler_move_browser());
   mg_server_add_handler(&server, mg_handler_events());
+  mg_server_add_handler(&server, mg_handler_get_audio_outputs());
   mg_server_add_handler(&server, mg_handler_static_resources());
 
   bool result = mg_server_start(&server, SERVER_PORT);
