@@ -3,6 +3,7 @@
 
 #include "server.h"
 #include "injector.h"
+#include "paudio.h"
 
 #include <stdio.h>
 #include <pthread.h>
@@ -112,12 +113,13 @@ static void* mg_server_thread(void *context) {
   struct mg_user_event *event = NULL;
 
   struct Injector *injector = Injector_createNew(manager);
+  struct PAudio *paudio = PAudio_getInstance();
 
   char injectUrl[60];
   snprintf(injectUrl, sizeof(injectUrl), "http://localhost:%hu/static/main.js", server->port);
 
   while (server->running) {
-    mg_mgr_poll(manager, 100);
+    mg_mgr_poll(manager, 20);
 
     event = mg_server_next_user_event(server);
     while (event != NULL) {
@@ -126,6 +128,7 @@ static void* mg_server_thread(void *context) {
     }
 
     Injector_tryLoadExternalJS(injector, injectUrl);
+    PAudio_runLoop(paudio);
   }
 
   return NULL;

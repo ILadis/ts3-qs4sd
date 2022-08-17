@@ -96,6 +96,20 @@ static inline bool mg_http_get_json_integer(
   return false;
 }
 
+static inline bool mg_http_get_json_double(
+    struct mg_http_message *msg,
+    const char *path,
+    double *value)
+{
+  double target;
+  if (mjson_get_number(msg->body.ptr, msg->body.len, path, &target) != 0) {
+    *value = target;
+    return true;
+  }
+
+  return false;
+}
+
 static inline void mg_http_printf_sse_json_chunk(
     struct mg_connection *conn,
     const char *json, ...)

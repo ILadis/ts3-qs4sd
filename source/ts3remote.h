@@ -6,15 +6,6 @@
 #include <vendor/ts3_functions.h>
 #include <vendor/teamspeak/public_rare_definitions.h>
 
-#define TS3_USER_EVENT 100
-
-enum TS3Event {
-  CONNECTION_STATE_CONNECTED = TS3_USER_EVENT,
-  CONNECTION_STATE_DISCONNECTED,
-  BOOKMARKS_UPDATED,
-  CLIENT_LIST_CHANGED
-};
-
 struct TS3Channel {
   uint64 id;
   char *name;

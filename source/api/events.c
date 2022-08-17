@@ -3,7 +3,6 @@
 #include "../api.h"
 
 #include "../plugin.h"
-#include "../ts3remote.h"
 
 static const char *tag = "EVENTS";
 
@@ -27,7 +26,7 @@ static void mg_handler_events_fn(
       mg_http_api_response(conn, "200 OK", "text/event-stream");
     }
   }
-  else if (event >= TS3_USER_EVENT && mg_handler_events_is_tagged(conn)) {
+  else if (event >= USER_EVENT && mg_handler_events_is_tagged(conn)) {
     const char *type = NULL;
 
     switch (event) {
@@ -39,6 +38,9 @@ static void mg_handler_events_fn(
       break;
     case CLIENT_LIST_CHANGED:
       type = "CLIENT_LIST_CHANGED";
+      break;
+    case AUDIO_OUTPUTS_CHANGED:
+      type = "AUDIO_OUTPUTS_CHANGED";
       break;
     }
 

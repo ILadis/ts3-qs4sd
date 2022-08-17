@@ -105,10 +105,7 @@ static void TS3Bookmark_update(struct TS3Bookmark *bookmark, struct PluginBookma
   }
 }
 
-static void TS3Remote_iterateBookmarkList(
-    struct TS3Remote *remote,
-    struct PluginBookmarkList *list)
-{
+static void TS3Remote_iterateBookmarkList(struct TS3Remote *remote, struct PluginBookmarkList *list) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
   struct TS3Server *server = &remote->server;
 

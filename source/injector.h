@@ -26,7 +26,7 @@ static inline void Injector_tryLoadExternalJS(
 {
   void Injector_gotoFetchWSUrlState(struct Injector *injector);
 
-  static const char jsCode[] =   "(function() {"
+  static const char jsCode[] = "(function() {"
   "  for (let s of document.scripts) {"
   "    if (s.src == '%s') {"
   "      return;"

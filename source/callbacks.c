@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "plugin.h"
 #include "ts3remote.h"
+#include "paudio.h"
 
 #include "server.h"
 #include "api.h"
@@ -33,6 +34,7 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_move_browser());
   mg_server_add_handler(&server, mg_handler_events());
   mg_server_add_handler(&server, mg_handler_get_audio_outputs());
+  mg_server_add_handler(&server, mg_handler_set_audio_output_volume());
   mg_server_add_handler(&server, mg_handler_static_resources());
 
   bool result = mg_server_start(&server, SERVER_PORT);
@@ -48,6 +50,9 @@ void ts3plugin_shutdown() {
 
   struct TS3Remote *remote = TS3Remote_getInstance(0);
   TS3Remote_resetConnection(remote);
+
+  struct PAudio *paudio = PAudio_getInstance();
+  PAudio_shutdown(paudio);
 }
 
 void ts3plugin_onConnectStatusChangeEvent(
@@ -153,4 +158,16 @@ void ts3plugin_onUpdateClientEvent(
     TS3Remote_updateClientWithId(remote, clientId);
     mg_server_user_event(&server, CLIENT_LIST_CHANGED, NULL);
   }
+}
+
+void paudio_onReady(struct PAudio *paudio) {
+  PAudio_updateOutputs(paudio);
+}
+
+void paudio_onOutputsChanged(struct PAudio *paudio) {
+  mg_server_user_event(&server, AUDIO_OUTPUTS_CHANGED, NULL);
+}
+
+void paudio_onError(struct PAudio *paudio) {
+  // nothing to do, maybe log error message
 }

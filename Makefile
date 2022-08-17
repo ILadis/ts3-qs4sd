@@ -5,7 +5,7 @@ CFILES   := $(wildcard source/*.c) $(wildcard source/api/*.c) \
             $(wildcard source/static/*.c)
 
 CFILES   += include/vendor/mongoose.c include/vendor/mjson.c
-CFLAGS   := -O2 -Wall -fPIC -include include/vendor/glibc_2.27.h
+CFLAGS   := -O2 -Wall -fPIC -Iinclude -include include/vendor/glibc_2.27.h -pthread
 CFLAGS   += `pkg-config --cflags --libs libpulse`
 TARGET   := ts3-qs4sd.so
 
@@ -42,4 +42,4 @@ clean:
 	@rm -rf $(TARGET)
 
 %.so:
-	@$(CC) $(CFLAGS) $(CFILES) -Iinclude -pthread -o $@ -shared
+	@$(CC) $(CFLAGS) $(CFILES) -o $@ -shared
