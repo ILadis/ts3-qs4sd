@@ -13,14 +13,15 @@ static void mg_handler_get_audio_outputs_fn(
 
     if (mg_http_reqmatch(msg, HTTP_METHOD_GET, "/api/audio/outputs")) {
       struct PAudio *paudio = PAudio_getInstance();
-      struct PAudioOutput *outputs = paudio->outputs;
+      struct PAudioOutput *output = NULL;
 
       mg_http_api_response(conn, "200 OK", "application/json");
       mg_http_printf_json_chunk(conn, "%s", "[");
 
-      for (int i = 0; i < 10; i++) {
-        mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_AUDIO_OUTPUT "}",
-          outputs[i].index, outputs[i].name, outputs[i].volume, outputs[i].muted);
+      int i = 0;
+      while (PAudio_nextOutput(paudio, &output)) {
+        mg_http_printf_json_chunk(conn, i++ ? ", %s" : "%s", "{" HTTP_JSON_AUDIO_OUTPUT "}",
+          output->index, output->name, output->volume, output->muted);
       }
 
       mg_http_printf_chunk(conn, "]");

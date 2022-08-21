@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <stdio.h>
 #include <string.h>
+
 #include <pulse/pulseaudio.h>
 
 #define PAUDIO_USER_EVENT 200
@@ -20,13 +22,14 @@ struct PAudio {
 
   struct PAudioOutput {
     int index;
-    char name[255];
+    char name[250];
     double volume;
     bool muted;
   } outputs[10];
 };
 
 #define PAudio_guardContextIsset(paudio, ...) do { if (paudio->context == NULL) return __VA_ARGS__; } while(0);
+#define PAudio_guardLastCallback(last, ...) do { if (last) return __VA_ARGS__; } while(0);
 
 #define PAudio_volumeToPercentage(value) (((double) value * 100) / PA_VOLUME_NORM)
 #define PAudio_percentageToVolume(value) (((double) value * PA_VOLUME_NORM) / 100)
@@ -37,6 +40,7 @@ void PAudio_shutdown(struct PAudio *paudio);
 
 bool PAudio_updateOutput(struct PAudio *paudio, int index);
 bool PAudio_updateOutputs(struct PAudio *paudio);
+bool PAudio_nextOutput(struct PAudio *paudio, struct PAudioOutput **output);
 
 bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume);
 

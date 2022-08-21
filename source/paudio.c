@@ -8,6 +8,7 @@ static void PAudio_subscriptionCallback(pa_context *context, pa_subscription_eve
 static void PAudio_contextStateCallback(pa_context *context, void *data);
 
 static bool PAudio_setupSubscription(struct PAudio *paudio);
+static void PAudio_removeOutput(struct PAudio *paudio, int index);
 
 struct PAudio* PAudio_getInstance() {
   static struct PAudio paudio = {0};
@@ -139,12 +140,9 @@ static void PAudio_subscriptionCallback(pa_context *context, pa_subscription_eve
 
   switch (facility) {
   case PA_SUBSCRIPTION_EVENT_SINK_INPUT:
-    // TODO should we cancel any ongoing operations?
-    // TODO there may be a burst of sink input events, reduce "paudio_onOutputsChanged" callbacks
     if (type == PA_SUBSCRIPTION_EVENT_REMOVE) {
-      PAudio_updateOutputs(paudio);
-    }
-    else {
+      PAudio_removeOutput(paudio, index);
+    } else {
       PAudio_updateOutput(paudio, index);
     }
     break;
@@ -169,8 +167,19 @@ static void PAudioOutput_update(struct PAudioOutput *output, const pa_sink_input
 
   const char *name = pa_proplist_gets(proplist, "application.name");
   if (name != NULL) {
-    strcpy(output->name, name);
+    snprintf(output->name, sizeof(output->name), "%s", name);
   }
+}
+
+static bool PAudioOutput_changed(struct PAudioOutput *output, struct PAudioOutput *other) {
+  bool changed = false;
+
+  changed |= output->index != other->index;
+  changed |= output->muted != other->muted;
+  changed |= abs(output->volume - other->volume) > 0.01;
+  changed |= strcmp(output->name, other->name);
+
+  return changed;
 }
 
 static struct PAudioOutput* PAudio_getNextAudioOutput(struct PAudio *paudio) {
@@ -201,19 +210,33 @@ static struct PAudioOutput* PAudio_getAudioOutputByIndex(struct PAudio *paudio, 
   return output;
 }
 
+static void PAudio_removeOutput(struct PAudio *paudio, int index) {
+  struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, index);
+  if (output != NULL) {
+    PAudioOutput_reset(output);
+    paudio_onOutputsChanged(paudio);
+  }
+}
+
 static void PAudio_sinkInputInfoCallback(pa_context *context, const pa_sink_input_info *info, int last, void *data) {
   struct PAudio *paudio = data;
 
-  if (last) {
-    return paudio_onOutputsChanged(paudio);
-  }
+  PAudio_guardLastCallback(last);
 
   struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
   if (output == NULL) {
     output = PAudio_getNextAudioOutput(paudio);
   }
 
-  PAudioOutput_update(output, info);
+  if (output != NULL) {
+    struct PAudioOutput target = {0};
+    PAudioOutput_update(&target, info);
+
+    if (PAudioOutput_changed(output, &target)) {
+      *output = target;
+      paudio_onOutputsChanged(paudio);
+    }
+  }
 }
 
 bool PAudio_updateOutput(struct PAudio *paudio, int index) {
@@ -223,7 +246,7 @@ bool PAudio_updateOutput(struct PAudio *paudio, int index) {
   PAudio_guardContextIsset(paudio, false);
 
   operation = pa_context_get_sink_input_info(context, index, PAudio_sinkInputInfoCallback, paudio);
-  if (operation) {
+  if (operation != NULL) {
     pa_operation_unref(operation);
     return true;
   }
@@ -237,12 +260,8 @@ bool PAudio_updateOutputs(struct PAudio *paudio) {
 
   PAudio_guardContextIsset(paudio, false);
 
-  for (int i = 0; i < length(paudio->outputs); i++) {
-    PAudioOutput_reset(&paudio->outputs[i]);
-  }
-
   operation = pa_context_get_sink_input_info_list(context, PAudio_sinkInputInfoCallback, paudio);
-  if (operation) {
+  if (operation != NULL) {
     pa_operation_unref(operation);
     return true;
   }
@@ -252,10 +271,9 @@ bool PAudio_updateOutputs(struct PAudio *paudio) {
 
 static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink_input_info *info, int last, void *data) {
   struct PAudio *paudio = data;
+  pa_operation *operation = NULL;
 
-  if (last) {
-    return paudio_onOutputsChanged(paudio);
-  }
+  PAudio_guardLastCallback(last);
 
   struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
   if (output == NULL) {
@@ -266,9 +284,12 @@ static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink
 
   int channels = info->channel_map.channels;
   int value = PAudio_percentageToVolume(output->volume);
-
   pa_cvolume_set(&volume, channels, value);
-  pa_operation_unref(pa_context_set_sink_input_volume(context, info->index, &volume, NULL, NULL));
+
+  operation = pa_context_set_sink_input_volume(context, info->index, &volume, NULL, NULL);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+  }
 }
 
 bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume) {
@@ -285,7 +306,7 @@ bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume) {
   output->volume = volume;
 
   operation = pa_context_get_sink_input_info(context, index, PAudio_setSinkInputVolumeCallback, paudio);
-  if (operation) {
+  if (operation != NULL) {
     pa_operation_unref(operation);
     return true;
   }
@@ -293,3 +314,24 @@ bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume) {
   return false;
 }
 
+bool PAudio_nextOutput(struct PAudio *paudio, struct PAudioOutput **output) {
+  struct PAudioOutput *previous = *output, *next = NULL;
+  int last = length(paudio->outputs) - 1;
+
+  if (previous == NULL) {
+    next = &paudio->outputs[0];
+  } else {
+    next = previous + 1;
+  }
+
+  do {
+    if (next->index != 0) {
+      *output = next;
+      return true;
+    }
+
+    next++;
+  } while (next != &paudio->outputs[last]);
+
+  return false;
+}

@@ -49,8 +49,7 @@ static int Injector_nextDevToolsPageItem(
       limit = size;
     }
 
-    strncpy(target, value + 1, limit);
-    target[limit] = '\0';
+    snprintf(target, limit, "%s", value + 1);
     break;
   case MJSON_TOK_OBJECT + 2:
   case MJSON_TOK_ARRAY + 2:
@@ -95,7 +94,7 @@ static void Injector_fetchWSUrlFn(
     struct DevToolsPageItem *item = NULL;
     while (mjson(msg->body.ptr, msg->body.len, Injector_nextDevToolsPageItem, &item) && item != NULL) {
       if (strcmp("QuickAccess", item->title) == 0) {
-        strncpy(injector->wsUrl, item->webSocketDebuggerUrl, sizeof(injector->wsUrl));
+        snprintf(injector->wsUrl, sizeof(injector->wsUrl), "%s", item->webSocketDebuggerUrl);
         break;
       }
     }
