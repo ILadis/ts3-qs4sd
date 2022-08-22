@@ -44,12 +44,7 @@ static int Injector_nextDevToolsPageItem(
     }
     else return 0;
 
-    int limit = len - 2;
-    if (limit > size) {
-      limit = size;
-    }
-
-    snprintf(target, limit, "%s", value + 1);
+    snprintf(target, size, "%.*s", len - 2, value + 1);
     break;
   case MJSON_TOK_OBJECT + 2:
   case MJSON_TOK_ARRAY + 2:

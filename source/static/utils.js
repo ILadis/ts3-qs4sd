@@ -26,3 +26,16 @@ export function define(tag, base, template, ctor) {
 export function sleep(millis) {
   return new Promise(resolve => window.setTimeout(resolve, millis));
 }
+
+export function retryable(action, times = 3) {
+  return async function() {
+    do {
+      try {
+        return await action.apply(this, arguments);
+      } catch (e) {
+        times--;
+        await sleep(500);
+      }
+    } while (times > 0);
+  }
+}

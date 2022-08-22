@@ -1,4 +1,6 @@
 
+import { retryable } from './utils.js'
+
 export function Client(endpoint) {
   let self = new URL(import.meta.url);
   this.endpoint = endpoint || (self.origin + '/api');
@@ -33,7 +35,7 @@ Client.prototype.disconnect = async function() {
   }
 };
 
-Client.prototype.getServer = async function() {
+Client.prototype.getServer = retryable(async function() {
   let url = this.endpoint + '/server';
 
   let request = new Request(url, {
@@ -51,7 +53,7 @@ Client.prototype.getServer = async function() {
     'name': String(server['name']),
     'status': Number(server['status']),
   };
-};
+});
 
 Client.prototype.getBookmarks = async function*() {
   let url = this.endpoint + '/server';
