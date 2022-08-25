@@ -7,6 +7,7 @@ A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick 
 - Connect to bookmarked servers.
 - See connected clients and join their channels.
 - Mute/Unmute microphone and speakers.
+- Control audio volumes of running applications.
 - Disconnect from current server.
 
 **Missing/Planned features**:  
@@ -17,12 +18,13 @@ A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick 
 ## Building
 
 The following dependencies are required to build the plugin:
-- [mjson](https://github.com/cesanta/mjson): for JSON parsing
-- [mongoose](https://github.com/cesanta/mongoose): for HTTP server/client and web sockets
-- [incbin](https://github.com/graphitemaster/incbin): for embedding static resources
-- [ts3client-pluginsdk](https://github.com/TeamSpeak-Systems/ts3client-pluginsdk): the TeamSpeak 3 plugin SDK
+1. [mjson](https://github.com/cesanta/mjson): for JSON parsing
+1. [mongoose](https://github.com/cesanta/mongoose): for HTTP server/client and web sockets
+1. [incbin](https://github.com/graphitemaster/incbin): for embedding static resources
+1. [ts3client-pluginsdk](https://github.com/TeamSpeak-Systems/ts3client-pluginsdk): the TeamSpeak 3 plugin SDK
+1. libpulse: to control audio volumes of applications
 
-To download all required dependencies run `make vendor` (this requires `wget`). Then run `make` to build the plugin.
+To download dependencies 1-4 run `make vendor` (this requires `wget`). All other dependencies need to be installed manually. Then run `make` to build the plugin.
 
 ## Installing
 
