@@ -75,8 +75,27 @@ async function dashboard(views, client) {
   views.dashboard.onMuteClick = (_, device) => mute(device);
   views.dashboard.onDisconnectClick = () => client.disconnect();
 
+  views.dashboard.onVolumeSettingsClick = async () => {
+    let toggle = false;
+    let panels = views.dashboard.getVolumePanels();
+    for (let panel of panels) {
+      views.dashboard.removeVolumePanel(panel);
+      toggle = true;
+    }
+
+    if (toggle) return;
+    let outputs = client.getAudioOutputs();
+
+    for await (let output of outputs) {
+      let panel = views.dashboard.addVolumePanel();
+      panel.setLabel(output.name);
+      panel.slider.setValue(output.volume);
+      panel.slider.onValueChange = (value) => client.setAudioOutputVolume(output.index, value);
+    }
+  };
+
   let lists = views.dashboard.getClientLists();
-  for await (let channel of channels) {
+  for (let channel of channels) {
     let list = lists.next().value || views.dashboard.addClientList();
     list.setChannelName(channel.name);
     list.setClientCount(channel.clients.length);

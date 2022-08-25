@@ -68,6 +68,48 @@ QuickAccessPanel.prototype.setContent = function(content) {
   node.appendChild(content);
 };
 
+export const TS3Slider = define('ts3-slider', 'div', html`
+<span></span>`, function() {
+  this.setValue(0);
+
+  let start = touchStart.bind(this);
+  let move = touchMove.bind(this);
+
+  this.addEventListener('touchstart', start);
+  this.addEventListener('touchmove', move);
+
+  for (let child of this.children) {
+    child.addEventListener('touchstart', start);
+    child.addEventListener('touchmove', move);
+  }
+
+  function touchStart(event) {
+    this.bounds = this.getBoundingClientRect();
+    move(event);
+  }
+
+  function touchMove(event) {
+    event.preventDefault();
+
+    let { x, width } = this.bounds;
+    let tx = event.touches[0].pageX;
+
+    let dx = tx - x;
+    if (dx < 0 || dx > width) return;
+
+    let value = dx / width;
+    this.setValue(value);
+
+    this.onValueChange(value);
+  }
+});
+
+TS3Slider.prototype.onValueChange = function() { };
+
+TS3Slider.prototype.setValue = function(value) {
+  this.style.setProperty('--value', value);
+};
+
 export const TS3BookmarkList = define('ts3-bookmark-list', 'div', html`
 <h2>SERVERS</h2>
 <ul></ul>`);
@@ -117,17 +159,18 @@ export const TS3Dashboard = define('ts3-dashboard', 'div', html`
 </svg>
 <h2></h2>
 <form class="Panel Focusable">
-  <button type="button" class="DialogButton Secondary Focusable">
+  <button type="button" name="input-mute" class="DialogButton Secondary Focusable">
     <svg viewBox="0 0 48 48">
       <use href="#input-mute-off">
     </svg>
   </button>
-  <button type="button" class="DialogButton Secondary Focusable">
+  <button type="button" name="output-mute" class="DialogButton Secondary Focusable">
     <svg viewBox="0 0 48 48">
       <use href="#output-mute-off">
     </svg>
   </button>
-  <button type="button" class="DialogButton Secondary Focusable">DISCONNECT</button>
+  <button type="button" name="disconnect" class="DialogButton Secondary Focusable">DISCONNECT</button>
+  <button type="button" name="volume-settings" class="DialogButton Secondary Focusable">VOLUME SETTINGS</button>
 </form>
 <hr>
 <section>
@@ -136,10 +179,12 @@ export const TS3Dashboard = define('ts3-dashboard', 'div', html`
   buttons[0].onclick = (event) => this.onMuteClick(event, 'input');
   buttons[1].onclick = (event) => this.onMuteClick(event, 'output');
   buttons[2].onclick = (event) => this.onDisconnectClick(event);
+  buttons[3].onclick = (event) => this.onVolumeSettingsClick(event);
 });
 
 TS3Dashboard.prototype.onMuteClick = function() { };
 TS3Dashboard.prototype.onDisconnectClick = function() { };
+TS3Dashboard.prototype.onVolumeSettingsClick = function() { };
 
 TS3Dashboard.prototype.setServerName = function(name) {
   let node = this.querySelector('h2');
@@ -151,6 +196,25 @@ TS3Dashboard.prototype.setDeviceMuted = function(device, muted) {
 
   let node = this.querySelector('use[href^="#' + device +'"]');
   node.setAttribute('href', href);
+};
+
+TS3Dashboard.prototype.addVolumePanel = function() {
+  let item = new TS3VolumePanel();
+
+  let node = this.querySelector('form');
+  node.appendChild(item);
+
+  return item;
+};
+
+TS3Dashboard.prototype.removeVolumePanel = function(item) {
+  let node = this.querySelector('form');
+  node.removeChild(item);
+};
+
+TS3Dashboard.prototype.getVolumePanels = function() {
+  let nodes = this.querySelectorAll('[is=ts3-volume-panel]');
+  return Array.from(nodes).values();
 };
 
 TS3Dashboard.prototype.addClientList = function() {
@@ -170,6 +234,17 @@ TS3Dashboard.prototype.removeClientList = function(item) {
 TS3Dashboard.prototype.getClientLists = function() {
   let node = this.querySelector('section');
   return Array.from(node.children).values();
+};
+
+export const TS3VolumePanel = define('ts3-volume-panel', 'div', html`
+<label></label>`, function() {
+  let slider = this.slider = new TS3Slider();
+  this.appendChild(slider);
+});
+
+TS3VolumePanel.prototype.setLabel = function(label) {
+  let node = this.querySelector('label');
+  node.textContent = label;
 };
 
 export const TS3ClientList = define('ts3-client-list', 'div', html`

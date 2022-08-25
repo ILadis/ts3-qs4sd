@@ -28,6 +28,36 @@
 [is=ts3-panel] > main {
   height: 100%;
   flex-grow: 1;
+  overflow-y: scroll;
+}
+
+[is=ts3-slider] {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  height: 6px;
+  background: #23262e;
+  overflow: visible;
+}
+
+[is=ts3-slider]::before {
+  content: ' ';
+  position: absolute;
+  height: 100%;
+  left: 0; right: calc(100% - 100% * var(--value));
+  background: #1a9fff;
+}
+
+[is=ts3-slider] > span {
+  content: ' ';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin: -9px;
+  right: calc(100% - 100% * var(--value));
+  box-shadow: 0px 0px 5px rgb(0 0 0 / 35%);
+  border-radius: 50%;
+  background: #fff;
 }
 
 [is=ts3-bookmark-list] > h2 {
@@ -69,12 +99,13 @@
 [is=ts3-dashboard] > form {
   display: flex;
   padding: 8px 16px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 5px;
 }
 
 [is=ts3-dashboard] > form > button {
   margin: 0;
+  width: 100%;
   color: #dcdedf;
   background: #23262e;
 }
@@ -85,16 +116,38 @@
   background: #fff;
 }
 
-[is=ts3-dashboard] > form > button:not(:last-child) {
+[is=ts3-dashboard] > form > button[name=input-mute],
+[is=ts3-dashboard] > form > button[name=output-mute] {
   display: flex;
   flex-shrink: 0;
   width: 40px;
   height: 40px;
 }
 
+[is=ts3-dashboard] > form > button[name=disconnect] {
+  width: 0;
+  flex-grow: 1;
+}
+
 [is=ts3-dashboard] > form > button svg {
   width: 24px;
   margin: auto;
+}
+
+[is=ts3-volume-panel] {
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+[is=ts3-volume-panel] > label {
+  width: 40%;
+  flex-shrink: 0;
+  padding-right: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 [is=ts3-client-list] {

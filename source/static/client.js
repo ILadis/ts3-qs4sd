@@ -102,6 +102,46 @@ Client.prototype.getSelf = async function() {
   };
 };
 
+Client.prototype.getAudioOutputs = async function*() {
+  let url = this.endpoint + '/audio/outputs';
+
+  let request = new Request(url, {
+    method: 'GET'
+  });
+
+  let response = await fetch(request);
+  if (!response.ok) {
+    throw new Error('failed to fetch audio outputs');
+  }
+
+  let outputs = await response.json();
+
+  for (let output of outputs) {
+    yield {
+      'index': Number(output['index']),
+      'name': String(output['name']),
+      'volume': Number(output['volume']) / 100,
+    };
+  }
+};
+
+Client.prototype.setAudioOutputVolume = async function(index, volume) {
+  let url = this.endpoint + '/audio/outputs/volume';
+  let body = JSON.stringify({
+    'index': Number(index),
+    'volume': Number(volume) * 100,
+  });
+
+  let request = new Request(url, {
+    method: 'POST', body
+  });
+
+  let response = await fetch(request);
+  if (!response.ok) {
+    throw new Error('failed to set audio output volume');
+  }
+};
+
 Client.prototype.listChannels = async function() {
   let url = this.endpoint + '/clients';
 

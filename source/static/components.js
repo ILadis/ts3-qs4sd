@@ -1,7 +1,6 @@
 import { Modules } from './modules';
 
-let modules = new Modules();
-modules.load();
+let modules = Modules.fromWebpack();
 
 export const [React] = modules.find(module => {
   if (typeof module !== 'object') return false;
