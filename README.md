@@ -1,6 +1,7 @@
 A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick access menu.
 
 <img src="screenshot.jpg" width="50%">
+<img src="screenshot2.jpg" width="50%">
 
 ## Features
 
