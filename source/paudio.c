@@ -12,6 +12,7 @@ static void PAudio_removeOutput(struct PAudio *paudio, int index);
 
 struct PAudio* PAudio_getInstance() {
   static struct PAudio paudio = {0};
+  static const char *name = "TS3 QS4SD PAudio";
 
   if (paudio.context != NULL) {
     return &paudio;
@@ -20,14 +21,23 @@ struct PAudio* PAudio_getInstance() {
   pa_mainloop *mainloop = NULL;
   pa_mainloop_api *api = NULL;
   pa_context *context = NULL;
+  pa_proplist *proplist = NULL;
 
   mainloop = paudio.mainloop = pa_mainloop_new();
   if (mainloop == NULL) {
     goto error;
   }
 
+  /* Required to get write access to pipewire, see:
+   * https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/667
+   */
+  proplist = paudio.proplist = pa_proplist_new();
+  pa_proplist_sets(proplist, "media.type", "Audio");
+  pa_proplist_sets(proplist, "media.category", "Manager");
+  pa_proplist_sets(proplist, "media.role", "Music");
+
   api = paudio.api = pa_mainloop_get_api(mainloop);
-  context = paudio.context = pa_context_new(api, NULL);
+  context = paudio.context = pa_context_new_with_proplist(api, name, proplist);
   if (context == NULL) {
     goto error;
   }
@@ -40,6 +50,10 @@ struct PAudio* PAudio_getInstance() {
   return &paudio;
 
 error:
+  if (proplist != NULL) {
+    pa_proplist_free(proplist);
+  }
+
   if (context != NULL) {
     pa_context_unref(context);
   }
@@ -51,24 +65,33 @@ error:
   paudio.mainloop = NULL;
   paudio.api = NULL;
   paudio.context = NULL;
+  paudio.proplist = NULL;
 
   return &paudio;
 }
 
 bool PAudio_runLoop(struct PAudio *paudio) {
   pa_mainloop *mainloop = paudio->mainloop;
+  pa_proplist *proplist = paudio->proplist;
 
   PAudio_guardContextIsset(paudio, false);
   int result = pa_mainloop_iterate(mainloop, 0, NULL);
 
   if (result < 0) {
     pa_mainloop_free(mainloop);
+    pa_proplist_free(proplist);
 
     paudio->mainloop = NULL;
     paudio->api = NULL;
     paudio->context = NULL;
+    paudio->proplist = NULL;
 
     return false;
+  }
+
+  int errno = pa_context_errno(paudio->context);
+  if (errno != 0) {
+    paudio_onError(paudio, pa_strerror(errno));
   }
 
   return true;
@@ -171,6 +194,10 @@ static void PAudioOutput_update(struct PAudioOutput *output, const pa_sink_input
   }
 }
 
+static bool PAudioOutput_hasName(struct PAudioOutput *output) {
+  return strlen(output->name) > 0;
+}
+
 static bool PAudioOutput_changed(struct PAudioOutput *output, struct PAudioOutput *other) {
   bool changed = false;
 
@@ -223,15 +250,19 @@ static void PAudio_sinkInputInfoCallback(pa_context *context, const pa_sink_inpu
 
   PAudio_guardLastCallback(last);
 
+  struct PAudioOutput target = {0};
+  PAudioOutput_update(&target, info);
+
+  if (!PAudioOutput_hasName(&target)) {
+    return; // only add output devices with application names
+  }
+
   struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
   if (output == NULL) {
     output = PAudio_getNextAudioOutput(paudio);
   }
 
   if (output != NULL) {
-    struct PAudioOutput target = {0};
-    PAudioOutput_update(&target, info);
-
     if (PAudioOutput_changed(output, &target)) {
       *output = target;
       paudio_onOutputsChanged(paudio);
@@ -277,13 +308,13 @@ static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink
 
   struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
   if (output == NULL) {
-    return paudio_onError(paudio);
+    return paudio_onError(paudio, "failed to get PAudioOutput by index");
   }
-
-  pa_cvolume volume = info->volume;
 
   int channels = info->channel_map.channels;
   int value = PAudio_percentageToVolume(output->volume);
+
+  pa_cvolume volume = { .channels = 1 };
   pa_cvolume_set(&volume, channels, value);
 
   operation = pa_context_set_sink_input_volume(context, info->index, &volume, NULL, NULL);

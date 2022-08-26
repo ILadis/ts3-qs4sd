@@ -19,6 +19,7 @@ struct PAudio {
   pa_mainloop *mainloop;
   pa_mainloop_api *api;
   pa_context *context;
+  pa_proplist *proplist;
 
   struct PAudioOutput {
     int index;
@@ -47,6 +48,6 @@ bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume);
 // external callbacks
 extern void paudio_onReady(struct PAudio *paudio);
 extern void paudio_onOutputsChanged(struct PAudio *paudio);
-extern void paudio_onError(struct PAudio *paudio); // TODO add error code/message
+extern void paudio_onError(struct PAudio *paudio, const char *message);
 
 #endif

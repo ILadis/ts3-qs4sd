@@ -168,6 +168,6 @@ void paudio_onOutputsChanged(struct PAudio *paudio) {
   mg_server_user_event(&server, AUDIO_OUTPUTS_CHANGED, NULL);
 }
 
-void paudio_onError(struct PAudio *paudio) {
+void paudio_onError(struct PAudio *paudio, const char *message) {
   // nothing to do, maybe log error message
 }
