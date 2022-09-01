@@ -1,9 +1,8 @@
 
-
 #include "states.h"
 
 static void Injector_fetchRetryFn(void *context) {
-  struct Injector *injector  =(struct Injector *) context;
+  struct Injector *injector = (struct Injector *) context;
   Injector_gotoFetchWSUrlState(injector);
 }
 

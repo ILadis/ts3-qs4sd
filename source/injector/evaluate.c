@@ -1,7 +1,7 @@
 
 #include "states.h"
 
-static void Injector_evaluateJsCodeFn(
+static void Injector_evaluateJSCodeFn(
     struct mg_connection *conn,
     int event, void *data, void *context)
 {
@@ -12,7 +12,7 @@ static void Injector_evaluateJsCodeFn(
     const char json[] = "{"
         "\"id\":%d,"
         "\"method\":\"Runtime.evaluate\","
-        "\"params\":\{"
+        "\"params\":{"
             "\"expression\":%Q,"
             "\"userGesture\":true,"
             "\"awaitPromise\":true"
@@ -30,5 +30,5 @@ static void Injector_evaluateJsCodeFn(
 
 void Injector_gotoEvaluateJSCodeState(struct Injector *injector) {
   injector->state = STATE_EVALUATE_JS_CODE;
-  injector->conn = mg_ws_connect(injector->manager, injector->wsUrl, Injector_evaluateJsCodeFn, injector, NULL);
+  injector->conn = mg_ws_connect(injector->manager, injector->wsUrl, Injector_evaluateJSCodeFn, injector, NULL);
 }
