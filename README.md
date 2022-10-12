@@ -31,7 +31,7 @@ To download dependencies 1-4 run `make vendor` (this requires `wget`). All other
 
 Follow these steps in order to install and setup the plugin on your Steam Deck:
 1. Switch to desktop mode, download TeamSpeak from the Discover store and launch it.
-1. Download a [pre build version](https://github.com/ILadis/ts3-qs4sd/releases) of the plugin and copy it into the TeamSpeak plugin folder at: `/home/deck/.var/com.teamspeak.TeamSpeak/config/.ts3client/plugins`
+1. Download a [pre build version](https://github.com/ILadis/ts3-qs4sd/releases) of the plugin and copy it into the TeamSpeak plugin folder at: `/home/deck/.var/app/com.teamspeak.TeamSpeak/.ts3client/plugins`
 1. In TeamSpeak open Tools ⇾ Options ⇾ Addons and check if the plugin was loaded successfully; try restarting TeamSpeak if it doesn't show up.
 1. Add all TeamSpeak servers you want to connect to as bookmarks (Bookmarks ⇾ Manage Bookmarks).
 1. Add TeamSpeak as a non-Steam game; then switch back to gaming mode.
