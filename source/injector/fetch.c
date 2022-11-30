@@ -88,7 +88,7 @@ static void Injector_fetchWSUrlFn(
 
     struct DevToolsPageItem *item = NULL;
     while (mjson(msg->body.ptr, msg->body.len, Injector_nextDevToolsPageItem, &item) && item != NULL) {
-      if (strcmp("QuickAccess", item->title) == 0) {
+      if (strncmp("QuickAccess", item->title, 11) == 0) {
         snprintf(injector->wsUrl, sizeof(injector->wsUrl), "%s", item->webSocketDebuggerUrl);
         break;
       }
