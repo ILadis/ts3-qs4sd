@@ -15,6 +15,7 @@ A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick 
 - Display client avatars and their current status.
 - Make compatible with [PluginLoader](https://github.com/SteamDeckHomebrew/PluginLoader).
 - Add navigation via controller and buttons.
+- Add logging for easier trouble shooting.
 
 ## Building
 
