@@ -26,8 +26,8 @@ vendor:
 	@wget https://github.com/graphitemaster/incbin/raw/main/incbin.h -qO include/vendor/incbin.h
 	@wget https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.c -qO include/vendor/mjson.c
 	@wget https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.h -qO include/vendor/mjson.h
-	@wget https://github.com/cesanta/mongoose/raw/7.7/mongoose.c -qO include/vendor/mongoose.c
-	@wget https://github.com/cesanta/mongoose/raw/7.7/mongoose.h -qO include/vendor/mongoose.h
+	@wget https://github.com/cesanta/mongoose/raw/7.8/mongoose.c -qO include/vendor/mongoose.c
+	@wget https://github.com/cesanta/mongoose/raw/7.8/mongoose.h -qO include/vendor/mongoose.h
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/plugin_definitions.h -qO include/vendor/plugin_definitions.h
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/ts3_functions.h -qO include/vendor/ts3_functions.h
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamlog/logtypes.h -qO include/vendor/teamspeak/teamlog/logtypes.h
