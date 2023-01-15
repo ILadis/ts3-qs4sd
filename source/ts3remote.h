@@ -6,6 +6,10 @@
 #include <vendor/ts3_functions.h>
 #include <vendor/teamspeak/public_rare_definitions.h>
 
+/* A sample plugin can be found here:
+ * https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/blob/master/src/plugin.c
+ */
+
 struct TS3Channel {
   uint64 id;
   char *name;

@@ -82,6 +82,12 @@ static void Injector_fetchWSUrlFn(
     mg_printf(conn, HTTP_REQUEST(SETTINGS_ADDR(STEAM_DECK), "GET", "/json"));
     mg_printf(conn, HTTP_NEWLINE);
   }
+  else if (event == MG_EV_ERROR) {
+    Logger_errorLog("Could not fetch injection url: %s", data);
+    struct Injector *injector = (struct Injector *) context;
+    conn->is_closing = 1;
+    return Injector_gotoRetryState(injector);
+  }
   else if (event == MG_EV_HTTP_MSG) {
     struct Injector *injector = (struct Injector *) context;
     struct mg_http_message *msg = (struct mg_http_message *) data;
@@ -106,6 +112,7 @@ static void Injector_fetchWSUrlFn(
 
 void Injector_gotoFetchWSUrlState(struct Injector *injector) {
   const char url[] = "http://" SETTINGS_ADDR(STEAM_DECK) "/json";
+  Logger_debugLog("Attempt to fetch injection url from: %s", url);
 
   injector->state = STATE_FETCH_WS_URL;
   injector->conn = mg_http_connect(injector->manager, url, Injector_fetchWSUrlFn, injector);

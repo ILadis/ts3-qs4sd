@@ -2,6 +2,7 @@
 #define INJECTOR_H
 
 #include "server.h"
+#include "log.h"
 
 struct Injector {
   struct mg_mgr *manager;

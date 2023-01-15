@@ -10,6 +10,7 @@
 
 static void mg_server_handler(struct mg_connection *conn, int event, void *data,void *context);
 static void* mg_server_thread(void *context);
+static void mg_server_set_log(int severity);
 
 bool mg_server_start(
     struct mg_server *server,
@@ -18,11 +19,14 @@ bool mg_server_start(
   server->running = true;
   server->port = port;
 
+  mg_server_set_log(MG_LL_INFO);
+
   struct mg_mgr *manager = &server->manager;
   mg_mgr_init(manager);
 
   char url[20];
   snprintf(url, sizeof(url), "0.0.0.0:%hu", port);
+  Logger_infoLog("Starting server (API) on: %s", url);
 
   struct mg_connection *conn = mg_http_listen(manager, url, mg_server_handler, server);
   if (conn == NULL) goto failure;
@@ -112,6 +116,8 @@ static void* mg_server_thread(void *context) {
   struct mg_mgr *manager = &server->manager;
   struct mg_user_event *event = NULL;
 
+  Logger_infoLog("Server (API) thread started");
+
   struct Injector *injector = Injector_createNew(manager);
   struct PAudio *paudio = PAudio_getInstance();
 
@@ -130,6 +136,8 @@ static void* mg_server_thread(void *context) {
     Injector_tryLoadExternalJS(injector, injectUrl);
     PAudio_runLoop(paudio);
   }
+
+  Logger_infoLog("Server (API) thread stopped");
 
   return NULL;
 }
@@ -162,4 +170,40 @@ static void mg_handler_not_found_fn(
 struct mg_handler* mg_handler_not_found() {
   static struct mg_handler handler = mg_handler_of(mg_handler_not_found_fn);
   return &handler;
+}
+
+static void mg_server_log(char symbol, void *data) {
+  static int index = 0;
+  static char message[1024];
+
+  // create log message for each new line character
+  if (symbol == '\n') {
+    symbol = '\0';
+  }
+
+  message[index++] = symbol;
+
+  if (index >= sizeof(message) || symbol == '\0') {
+    int *severity = (int *) data; index = 0;
+    switch (*severity) {
+      case MG_LL_ERROR:
+        Logger_errorLog("Mongoose: %s", message);
+        break;
+      case MG_LL_INFO:
+        Logger_infoLog("Mongoose: %s", message);
+        break;
+      case MG_LL_DEBUG:
+      case MG_LL_VERBOSE:
+        Logger_debugLog("Mongoose: %s", message);
+        break;
+    }
+  }
+}
+
+static void mg_server_set_log(int level) {
+  static int severity = 0;
+
+  severity = level;
+  mg_log_set(severity);
+  mg_log_set_fn(mg_server_log, &severity);
 }
