@@ -61,6 +61,11 @@ static void mg_server_handler(
   struct mg_server *server = context;
   struct mg_handler *handler = server->handler;
 
+  if (event == MG_EV_HTTP_MSG) {
+    struct mg_http_message *msg = (struct mg_http_message *) data;
+    Logger_debugLog("Request to %.*s %.*s", msg->method.len, msg->method.ptr, msg->uri.len, msg->uri.ptr);
+  }
+
   while (handler != NULL) {
     handler->fn(conn, event, data);
     handler = handler->next;
