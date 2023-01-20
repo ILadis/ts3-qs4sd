@@ -4,6 +4,7 @@
 
 #include "resource.h"
 
+INCBIN(test_html, "source/static/test.html");
 INCBIN(main_js, "source/static/main.js");
 INCBIN(modules_js, "source/static/modules.js");
 INCBIN(components_js, "source/static/components.js");
@@ -14,6 +15,7 @@ INCBIN(styles_css, "source/static/styles.css");
 INCBIN(logo_svg, "source/static/logo.svg");
 
 static struct mg_resource resources[] = {
+  mg_resource_of("/static/test.html", "text/html", test_html),
   mg_resource_of("/static/main.js", "text/javascript", main_js),
   mg_resource_of("/static/modules.js", "text/javascript", modules_js),
   mg_resource_of("/static/components.js", "text/javascript", components_js),
@@ -49,6 +51,9 @@ static void mg_handler_static_resources_fn(
       mg_printf(conn, "Content-Type: %s\r\n", resource->media);
       mg_printf(conn, "Access-Control-Allow-Origin: " CORS_ORIGIN "\r\n\r\n");
       mg_printf(conn, "%.*s", *resource->size, resource->data);
+
+      // signal end of response body
+      conn->is_resp = 0;
     }
   }
 }

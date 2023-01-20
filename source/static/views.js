@@ -19,8 +19,8 @@ QuickAccessMenu.fetchLogo = async function(path) {
 
 QuickAccessMenu.replaceMenuItem = async function(index, logo) {
   do {
-    let tab = document.querySelector('.quickaccessmenu_TabContentColumn_2z5NL');
-    let contents = document.querySelector('.quickaccessmenu_AllTabContents_2yKG4');
+    let tab = document.querySelector('[class*=TabContentColumn]');
+    let contents = document.querySelector('[class*=AllTabContents]');
 
     await sleep(100);
 
