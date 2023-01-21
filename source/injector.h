@@ -6,8 +6,6 @@
 
 struct Injector {
   struct mg_mgr *manager;
-  struct mg_connection *conn;
-  struct mg_timer *timer;
 
   enum {
     STATE_FETCH_WS_URL = 1,
@@ -20,6 +18,13 @@ struct Injector {
 };
 
 #define Injector_createNew(manager) &(struct Injector){ manager }
+
+static inline void Injector_setState(
+    struct Injector *injector,
+    int state)
+{
+  injector->state = state;
+}
 
 static inline void Injector_tryLoadExternalJS(
     struct Injector *injector,

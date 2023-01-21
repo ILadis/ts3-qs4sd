@@ -7,6 +7,6 @@
 #include <vendor/ts3_functions.h>
 
 struct TS3Functions* ts3plugin_getFunctionPointers();
-void ts3plugin_setFunctionPointers(const struct TS3Functions funcs);
+struct mg_server* ts3plugin_getServer();
 
 #endif

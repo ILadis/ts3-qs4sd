@@ -18,6 +18,10 @@ void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
   ts3funcs = funcs;
 }
 
+struct mg_server* ts3plugin_getServer() {
+  return &server;
+}
+
 int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_not_found());
   mg_server_add_handler(&server, mg_handler_get_server());

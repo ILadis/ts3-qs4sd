@@ -38,6 +38,8 @@ void Injector_gotoEvaluateJSCodeState(struct Injector *injector) {
   const char *url = injector->wsUrl;
   Logger_debugLog("Injecting javascript into: %s", url);
 
-  injector->state = STATE_EVALUATE_JS_CODE;
-  injector->conn = mg_ws_connect(injector->manager, url, Injector_evaluateJSCodeFn, injector, NULL);
+  Logger_enableDevToolsLogging(url);
+
+  Injector_setState(injector, STATE_EVALUATE_JS_CODE);
+  mg_ws_connect(injector->manager, url, Injector_evaluateJSCodeFn, injector, NULL);
 }

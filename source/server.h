@@ -82,6 +82,14 @@ static inline bool mg_http_get_json_string(
   return mjson_get_string(msg->body.ptr, msg->body.len, path, value, len) != -1;
 }
 
+static inline bool mg_ws_get_json_string(
+    struct mg_ws_message *ws,
+    const char *path,
+    char *value, int len)
+{
+  return mjson_get_string(ws->data.ptr, ws->data.len, path, value, len) != -1;
+}
+
 static inline bool mg_http_get_json_integer(
     struct mg_http_message *msg,
     const char *path,

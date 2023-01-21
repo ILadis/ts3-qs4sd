@@ -114,6 +114,6 @@ void Injector_gotoFetchWSUrlState(struct Injector *injector) {
   const char url[] = "http://" SETTINGS_ADDR(STEAM_DECK) "/json";
   Logger_debugLog("Attempt to fetch injection url from: %s", url);
 
-  injector->state = STATE_FETCH_WS_URL;
-  injector->conn = mg_http_connect(injector->manager, url, Injector_fetchWSUrlFn, injector);
+  Injector_setState(injector, STATE_FETCH_WS_URL);
+  mg_http_connect(injector->manager, url, Injector_fetchWSUrlFn, injector);
 }
