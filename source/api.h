@@ -59,6 +59,9 @@ static inline void mg_http_api_response(
     ? "HTTP/1.1 %s\r\nContent-Length: 0\r\n"
     : "HTTP/1.1 %s\r\nTransfer-Encoding: chunked\r\nContent-Type: %s\r\n", status, media);
   mg_printf(conn, "Access-Control-Allow-Origin: " CORS_ORIGIN "\r\n\r\n");
+
+  // signal end of response body
+  conn->is_resp = 0;
 }
 
 #endif
