@@ -24,7 +24,6 @@ async function main() {
 
   state(views, client);
 
-  // TODO handle rejected promise (SSE disconnects)
   for await (let event of events) {
     handle(event, views, client);
   }

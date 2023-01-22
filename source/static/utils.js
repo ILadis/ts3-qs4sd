@@ -27,15 +27,18 @@ export function sleep(millis) {
   return new Promise(resolve => window.setTimeout(resolve, millis));
 }
 
-export function retryable(action, times = 3) {
-  return async function() {
-    do {
+export function retry(action, times = 3) {
+  return new Promise(async (resolve, reject) => {
+    while (true) {
       try {
-        return await action.apply(this, arguments);
-      } catch (e) {
-        times--;
-        await sleep(500);
+        return resolve(await action());
+      } catch (error) {
+        if (--times > 0) {
+          await sleep(500);
+        } else {
+          return reject(error);
+        }
       }
-    } while (times > 0);
-  }
+    }
+  });
 }

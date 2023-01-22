@@ -1,5 +1,5 @@
 
-import { retryable } from './utils.js'
+import { retry, sleep } from './utils.js'
 
 export function Client(endpoint) {
   let self = new URL(import.meta.url);
@@ -16,7 +16,7 @@ Client.prototype.connect = async function(uuid) {
     method: 'POST', body
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error(`failed to connect to server ${uuid}`);
   }
@@ -29,20 +29,20 @@ Client.prototype.disconnect = async function() {
     method: 'POST'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to disconnect from server');
   }
 };
 
-Client.prototype.getServer = retryable(async function() {
+Client.prototype.getServer = async function() {
   let url = this.endpoint + '/server';
 
   let request = new Request(url, {
     method: 'GET'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to fetch server');
   }
@@ -53,7 +53,7 @@ Client.prototype.getServer = retryable(async function() {
     'name': String(server['name']),
     'status': Number(server['status']),
   };
-});
+};
 
 Client.prototype.getBookmarks = async function*() {
   let url = this.endpoint + '/server';
@@ -62,7 +62,7 @@ Client.prototype.getBookmarks = async function*() {
     method: 'GET'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to fetch bookmarks');
   }
@@ -85,7 +85,7 @@ Client.prototype.getSelf = async function() {
     method: 'GET'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to fetch self');
   }
@@ -109,7 +109,7 @@ Client.prototype.getAudioOutputs = async function*() {
     method: 'GET'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to fetch audio outputs');
   }
@@ -136,7 +136,7 @@ Client.prototype.setAudioOutputVolume = async function(index, volume) {
     method: 'POST', body
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to set audio output volume');
   }
@@ -149,7 +149,7 @@ Client.prototype.listChannels = async function() {
     method: 'GET'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to fetch clients');
   }
@@ -193,7 +193,7 @@ Client.prototype.muteClient = async function(id, device, mute) {
     method: 'POST', body
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error(`failed to mute/unmute ${device} device of client ${id}`);
   }
@@ -209,7 +209,7 @@ Client.prototype.moveCursor = async function(channel) {
     method: 'POST', body
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error(`failed to move cursor to channel ${channel.id}`);
   }
@@ -222,29 +222,33 @@ Client.prototype.joinCursor = async function() {
     method: 'POST'
   });
 
-  let response = await fetch(request);
+  let response = await retry(() => fetch(request));
   if (!response.ok) {
     throw new Error('failed to join channel the cursor points to');
   }
 };
 
 Client.prototype.listenEvents = function*() {
-  let url = this.endpoint + '/events';
-  let source = new EventSource(url);
+  const url = this.endpoint + '/events';
+  var source = connect(), resolve = () => { };
 
-  let running = true, resolve = () => { };
+  function connect() {
+    source = new EventSource(url);
+    source.onmessage = consume;
+    source.onerror = reconnect;
+    return source;
+  }
 
-  source.onerror = function() {
-    running = false;
-    // TODO reject current promise
-  };
+  function reconnect() {
+    sleep(500).then(connect);
+  }
 
-  source.onmessage = function(event) {
+  function consume(event) {
     let data = JSON.parse(event.data);
     resolve(data);
-  };
+  }
 
-  while (running) {
+  while (true) {
     yield new Promise(r => resolve = r);
   }
 };
