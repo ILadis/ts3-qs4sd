@@ -66,10 +66,10 @@ static inline void mg_http_printf_json_chunk(
   static char buf[250];
   struct mjson_fixedbuf fb = { buf, sizeof(buf), 0 };
 
-  va_list ap;
-  va_start(ap, json);
-  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &ap);
-  va_end(ap);
+  va_list arguments;
+  va_start(arguments, json);
+  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &arguments);
+  va_end(arguments);
 
   mg_http_printf_chunk(conn, fmt, buf);
 }
@@ -125,10 +125,10 @@ static inline void mg_http_printf_sse_json_chunk(
   static char buf[250];
   struct mjson_fixedbuf fb = { buf, sizeof(buf), 0 };
 
-  va_list ap;
-  va_start(ap, json);
-  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &ap);
-  va_end(ap);
+  va_list arguments;
+  va_start(arguments, json);
+  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &arguments);
+  va_end(arguments);
 
   mg_http_printf_chunk(conn, "data: %s\r\n\r\n", buf);
 }
