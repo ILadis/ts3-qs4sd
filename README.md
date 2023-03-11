@@ -10,10 +10,10 @@ A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick 
 - Mute/Unmute microphone and speakers.
 - Control audio volumes of running applications.
 - Disconnect from current server.
+- Push-to-Talk via shoulder buttons (bound to L5).
 
 **Missing/Planned features**:  
 - Display client avatars and their current status.
-- Implement push to talk via controller/buttons.
 - Make compatible with [PluginLoader](https://github.com/SteamDeckHomebrew/PluginLoader).
 - Add navigation via controller/buttons.
 - Add logging for easier trouble shooting.
@@ -36,6 +36,7 @@ Follow these steps in order to install and setup the plugin on your Steam Deck:
 1. Download a [pre build version](https://github.com/ILadis/ts3-qs4sd/releases) of the plugin and copy it into the TeamSpeak plugin folder at: `/home/deck/.var/app/com.teamspeak.TeamSpeak/.ts3client/plugins`
 1. In TeamSpeak open Tools ⇾ Options ⇾ Addons and check if the plugin was loaded successfully; try restarting TeamSpeak if it doesn't show up.
 1. Add all TeamSpeak servers you want to connect to as bookmarks (Bookmarks ⇾ Manage Bookmarks).
+1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs: `flatpak override --user com.teamspeak.TeamSpeak --device=all`
 1. Add TeamSpeak as a non-Steam game; then switch back to gaming mode.
 1. In gaming mode, open the Steam Deck settings.
 1. Navigate to System ⇾ System Settings and toggle "Enable Developer Mode".
