@@ -36,6 +36,7 @@ struct PAudio {
 #define PAudio_percentageToVolume(value) (((double) value * PA_VOLUME_NORM) / 100)
 
 struct PAudio* PAudio_getInstance();
+bool PAudio_connect(struct PAudio *paudio);
 bool PAudio_runLoop(struct PAudio *paudio);
 void PAudio_shutdown(struct PAudio *paudio);
 

@@ -6,7 +6,7 @@ CFILES   := $(wildcard source/*.c) $(wildcard source/api/*.c) \
 
 CFILES   += include/vendor/mongoose.c include/vendor/mjson.c
 CFLAGS   := -O2 -Wall -fPIC -Iinclude -include include/vendor/glibc_2.27.h -pthread
-CFLAGS   += `pkg-config --cflags --libs libpulse`
+CFLAGS   += `pkg-config --cflags --libs libpulse hidapi-hidraw  hidapi-libusb`
 TARGET   := ts3-qs4sd.so
 
 # toolchain and flags

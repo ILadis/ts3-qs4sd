@@ -4,6 +4,8 @@
 #include "server.h"
 #include "injector.h"
 #include "paudio.h"
+#include "sdinput.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <pthread.h>
@@ -124,7 +126,16 @@ static void* mg_server_thread(void *context) {
   Logger_infoLog("Server (API) thread started");
 
   struct Injector *injector = Injector_createNew(manager);
+
   struct PAudio *paudio = PAudio_getInstance();
+  if (!PAudio_connect(paudio)) {
+    Logger_errorLog("Could not connect to Pulse Audio server");
+  }
+
+  struct SDInput *input = SDInput_getInstance();
+  if (!SDInput_tryOpenDevice(input)) {
+    Logger_errorLog("Could not open Steam Deck input device");
+  }
 
   char injectUrl[60];
   snprintf(injectUrl, sizeof(injectUrl), "http://localhost:%hu/static/main.js", server->port);
@@ -140,6 +151,7 @@ static void* mg_server_thread(void *context) {
 
     Injector_tryLoadExternalJS(injector, injectUrl);
     PAudio_runLoop(paudio);
+    SDInput_pollState(input);
   }
 
   Logger_infoLog("Server (API) thread stopped");

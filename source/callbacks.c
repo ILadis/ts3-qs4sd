@@ -3,6 +3,8 @@
 #include "plugin.h"
 #include "ts3remote.h"
 #include "paudio.h"
+#include "sdinput.h"
+#include "log.h"
 
 #include "server.h"
 #include "api.h"
@@ -57,6 +59,9 @@ void ts3plugin_shutdown() {
 
   struct PAudio *paudio = PAudio_getInstance();
   PAudio_shutdown(paudio);
+
+  struct SDInput *input = SDInput_getInstance();
+  SDInput_closeDevice(input);
 }
 
 void ts3plugin_onConnectStatusChangeEvent(
@@ -174,4 +179,11 @@ void paudio_onOutputsChanged(struct PAudio *paudio) {
 
 void paudio_onError(struct PAudio *paudio, const char *message) {
   // nothing to do, maybe log error message
+}
+
+void sdinput_onUpdate(struct SDInput *input) {
+  // TODO handle hotkeys
+  if (input->previous.A == false && input->current.A == true) {
+    Logger_infoLog("A button was hit");
+  }
 }

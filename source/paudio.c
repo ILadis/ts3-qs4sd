@@ -12,10 +12,15 @@ static void PAudio_removeOutput(struct PAudio *paudio, int index);
 
 struct PAudio* PAudio_getInstance() {
   static struct PAudio paudio = {0};
+  return &paudio;
+}
+
+bool PAudio_connect(struct PAudio *paudio) {
   static const char *name = "TS3 QS4SD PAudio";
 
-  if (paudio.context != NULL) {
-    return &paudio;
+  // don't try to reconnect
+  if (paudio->context != NULL) {
+    return true;
   }
 
   pa_mainloop *mainloop = NULL;
@@ -23,7 +28,7 @@ struct PAudio* PAudio_getInstance() {
   pa_context *context = NULL;
   pa_proplist *proplist = NULL;
 
-  mainloop = paudio.mainloop = pa_mainloop_new();
+  mainloop = paudio->mainloop = pa_mainloop_new();
   if (mainloop == NULL) {
     goto error;
   }
@@ -31,23 +36,23 @@ struct PAudio* PAudio_getInstance() {
   /* Required to get write access to pipewire, see:
    * https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/667
    */
-  proplist = paudio.proplist = pa_proplist_new();
+  proplist = paudio->proplist = pa_proplist_new();
   pa_proplist_sets(proplist, "media.type", "Audio");
   pa_proplist_sets(proplist, "media.category", "Manager");
   pa_proplist_sets(proplist, "media.role", "Music");
 
-  api = paudio.api = pa_mainloop_get_api(mainloop);
-  context = paudio.context = pa_context_new_with_proplist(api, name, proplist);
+  api = paudio->api = pa_mainloop_get_api(mainloop);
+  context = paudio->context = pa_context_new_with_proplist(api, name, proplist);
   if (context == NULL) {
     goto error;
   }
 
-  pa_context_set_state_callback(context, PAudio_contextStateCallback, &paudio);
+  pa_context_set_state_callback(context, PAudio_contextStateCallback, paudio);
   if (pa_context_connect(context, NULL, 0, NULL) < 0) {
     goto error;
   }
 
-  return &paudio;
+  return true;
 
 error:
   if (proplist != NULL) {
@@ -62,12 +67,12 @@ error:
     pa_mainloop_free(mainloop);
   }
 
-  paudio.mainloop = NULL;
-  paudio.api = NULL;
-  paudio.context = NULL;
-  paudio.proplist = NULL;
+  paudio->mainloop = NULL;
+  paudio->api = NULL;
+  paudio->context = NULL;
+  paudio->proplist = NULL;
 
-  return &paudio;
+  return false;
 }
 
 bool PAudio_runLoop(struct PAudio *paudio) {
