@@ -281,6 +281,15 @@ void TS3Remote_setAfk(struct TS3Remote *remote, bool afk) {
   ts3->flushClientSelfUpdates(remote->handle, NULL);
 }
 
+void TS3Remote_souldTalk(struct TS3Remote *remote, bool talk) {
+  struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
+
+  TS3Remote_guardHandleIsset(remote);
+
+  ts3->setClientSelfVariableAsInt(remote->handle, CLIENT_INPUT_DEACTIVATED, talk ? INPUT_ACTIVE : INPUT_DEACTIVATED);
+  ts3->flushClientSelfUpdates(remote->handle, NULL);
+}
+
 void TS3Remote_setCursorToSelf(struct TS3Remote *remote) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
 

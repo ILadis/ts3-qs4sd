@@ -197,8 +197,23 @@ void paudio_onError(struct PAudio *paudio, const char *message) {
 }
 
 void sdinput_onUpdate(struct SDInput *input) {
-  // TODO handle hotkeys
-  if (input->previous.A == false && input->current.A == true) {
-    Logger_infoLog("A button was hit");
+  static bool talk = false;
+
+  if (input->previous.L5 == true && input->current.L5 == true) {
+    if (!talk) {
+      Logger_infoLog("L5 button is held: PTT active");
+
+      struct TS3Remote *remote = TS3Remote_getInstance(0);
+      TS3Remote_souldTalk(remote, talk = true);
+    }
+  }
+
+  else if (input->previous.L5 == false && input->current.L5 == false) {
+    if (talk) {
+      Logger_infoLog("L5 button is NOT held: PTT inactive");
+
+      struct TS3Remote *remote = TS3Remote_getInstance(0);
+      TS3Remote_souldTalk(remote, talk = false);
+    }
   }
 }
