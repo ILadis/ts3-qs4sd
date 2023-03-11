@@ -4,12 +4,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-#include <hidapi.h>
+#include <string.h>
+
+#include <sys/ioctl.h>
+#include <sys/poll.h>
+
+#include <linux/hidraw.h>
 
 struct SDInput {
-  hid_device *device;
-
+  int fd;
   struct SDButtons {
     bool A, B, X, Y;
     bool L1, L2, L3, L4, L5;

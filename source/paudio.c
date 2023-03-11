@@ -1,5 +1,4 @@
 
-#include <stdio.h>
 #include "paudio.h"
 
 #define length(array) (sizeof(array)/sizeof(array[0]))

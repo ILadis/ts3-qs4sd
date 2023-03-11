@@ -6,58 +6,107 @@ struct SDInput* SDInput_getInstance() {
   return &input;
 }
 
+static int SDInput_openDeviceIfMatches(
+    const char *path,
+    const struct hidraw_devinfo *device,
+    const struct hidraw_report_descriptor *descriptor)
+{
+  int fd = open(path, O_RDWR|O_NONBLOCK);
+  if (fd < 0) {
+    goto error;
+  }
+
+  struct hidraw_devinfo dev = {0};
+  ioctl(fd, HIDIOCGRAWINFO, &dev);
+
+  if (dev.vendor != device->vendor || dev.product != device->product) {
+    goto error;
+  }
+
+  struct hidraw_report_descriptor desc = {0};
+  ioctl(fd, HIDIOCGRDESCSIZE, &desc.size);
+  ioctl(fd, HIDIOCGRDESC, &desc);
+
+  if (desc.size != descriptor->size) {
+    goto error;
+  }
+
+  int result = memcmp(desc.value, descriptor->value, desc.size);
+  if (result != 0) {
+    goto error;
+  }
+
+  return fd;
+
+error:
+  close(fd);
+  return -1;
+}
+
 bool SDInput_tryOpenDevice(struct SDInput *input) {
-  const unsigned short vid = 0x28DE, pid = 0x1205, usage = 0xFFFF;
+  const struct hidraw_devinfo device = {
+    .vendor = 0x28DE,
+    .product = 0x1205,
+  };
+
+  const struct hidraw_report_descriptor descriptor = {
+    .size = 25,
+    .value = {
+      0x06, 0xFF, 0xFF, 0x09, 0x01, 0xA1, 0x01, 0x15,
+      0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x40,
+      0x09, 0x01, 0x81, 0x02, 0x09, 0x01, 0xB1, 0x02,
+      0xC0
+    },
+  };
 
   // don't try to reopen device
-  if (input->device != NULL) {
+  if (input->fd > 0) {
     return true;
   }
 
-  struct hid_device_info *devices = hid_enumerate(vid, pid); // find all devices
-  struct hid_device_info *info = devices;
+  char path[16] = {0};
+  for (int index = 0; index < 255; index++) {
+    snprintf(path, sizeof(path), "/dev/hidraw%d", index);
 
-  hid_device *device = NULL;
-  while (info) {
-    if (info->usage_page == usage) {
-      device = hid_open_path(info->path);
-      break;
+    int fd = SDInput_openDeviceIfMatches(path, &device, &descriptor);
+    if (fd > 0) {
+      input->fd = fd;
+      return true;
     }
-    info = info->next;
   }
 
-  if (device == NULL) {
-    return false;
-  }
-
-  input->device = device;
-
-  return true;
+  return false;
 }
 
 void SDInput_closeDevice(struct SDInput *input) {
-  hid_device *device = input->device;
-  if (device != NULL) {
-    hid_close(device);
+  int fd = input->fd;
+  if (fd > 0) {
+    close(fd);
   }
 
   struct SDButtons buttons = {0};
 
-  input->device = NULL;
+  input->fd = 0;
   input->current = buttons;
   input->previous = buttons;
 }
 
 bool SDInput_pollState(struct SDInput *input) {
-  hid_device *device = input->device;
-  if (device == NULL) {
+  int fd = input->fd;
+  if (fd <= 0) {
     return false;
   }
 
   unsigned char data[64] = {0};
   const int timeout = 500;
 
-  int length = hid_read_timeout(device, data, sizeof(data), timeout);
+  struct pollfd pfd = { .fd = fd, .events = POLLIN };
+  int result = poll(&pfd, 1, timeout);
+  if (result <= 0) {
+    return false;
+  }
+
+  int length = read(fd, data, sizeof(data));
   if (length != sizeof(data)) {
     return false;
   }

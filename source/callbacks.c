@@ -4,6 +4,8 @@
 #include "ts3remote.h"
 #include "paudio.h"
 #include "sdinput.h"
+
+#include "executor.h"
 #include "log.h"
 
 #include "server.h"
@@ -48,6 +50,16 @@ int ts3plugin_init() {
     return 1;
   }
 
+  struct Executor *executor = Executor_getInstance();
+
+  extern void PAudio_task();
+  Executor_addTask(executor, PAudio_task);
+
+  extern void SDInput_task();
+  Executor_addTask(executor, SDInput_task);
+
+  Executor_start(executor);
+
   return 0;
 }
 
@@ -56,6 +68,9 @@ void ts3plugin_shutdown() {
 
   struct TS3Remote *remote = TS3Remote_getInstance(0);
   TS3Remote_resetConnection(remote);
+
+  struct Executor *executor = Executor_getInstance();
+  Executor_stop(executor);
 
   struct PAudio *paudio = PAudio_getInstance();
   PAudio_shutdown(paudio);

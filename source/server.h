@@ -2,7 +2,9 @@
 #define SERVER_H
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <pthread.h>
+
 #include <vendor/mongoose.h>
 #include <vendor/mjson.h>
 
