@@ -204,7 +204,7 @@ void sdinput_onUpdate(struct SDInput *input) {
       Logger_infoLog("L5 button is held: PTT active");
 
       struct TS3Remote *remote = TS3Remote_getInstance(0);
-      TS3Remote_souldTalk(remote, talk = true);
+      TS3Remote_shouldTalk(remote, talk = true);
     }
   }
 
@@ -213,7 +213,7 @@ void sdinput_onUpdate(struct SDInput *input) {
       Logger_infoLog("L5 button is NOT held: PTT inactive");
 
       struct TS3Remote *remote = TS3Remote_getInstance(0);
-      TS3Remote_souldTalk(remote, talk = false);
+      TS3Remote_shouldTalk(remote, talk = false);
     }
   }
 }

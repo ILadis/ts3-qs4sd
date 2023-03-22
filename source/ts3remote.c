@@ -281,7 +281,7 @@ void TS3Remote_setAfk(struct TS3Remote *remote, bool afk) {
   ts3->flushClientSelfUpdates(remote->handle, NULL);
 }
 
-void TS3Remote_souldTalk(struct TS3Remote *remote, bool talk) {
+void TS3Remote_shouldTalk(struct TS3Remote *remote, bool talk) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
 
   TS3Remote_guardHandleIsset(remote);
