@@ -1,5 +1,6 @@
 
 import { Client } from './client.js';
+import { retry } from './utils.js'
 import * as Views from './views.js';
 
 main();
@@ -19,7 +20,7 @@ async function main() {
   let client = new Client(); // for testing use endpoint: 'http://localhost:8000/api'
   let events = client.listenEvents();
 
-  let server = await client.getServer();
+  let server = await retry(() => client.getServer(), Infinity);
   let state = server.status == 0 ? bookmarks : dashboard;
 
   state(views, client);

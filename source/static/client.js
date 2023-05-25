@@ -1,5 +1,5 @@
 
-import { retry, sleep } from './utils.js'
+import { retry, sleep, fətch } from './utils.js'
 
 export function Client(endpoint) {
   let self = new URL(import.meta.url);
@@ -16,7 +16,7 @@ Client.prototype.connect = async function(uuid) {
     method: 'POST', body
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error(`failed to connect to server ${uuid}`);
   }
@@ -29,7 +29,7 @@ Client.prototype.disconnect = async function() {
     method: 'POST'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to disconnect from server');
   }
@@ -42,7 +42,7 @@ Client.prototype.getServer = async function() {
     method: 'GET'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to fetch server');
   }
@@ -62,7 +62,7 @@ Client.prototype.getBookmarks = async function*() {
     method: 'GET'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to fetch bookmarks');
   }
@@ -85,7 +85,7 @@ Client.prototype.getSelf = async function() {
     method: 'GET'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to fetch self');
   }
@@ -109,7 +109,7 @@ Client.prototype.getAudioOutputs = async function*() {
     method: 'GET'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to fetch audio outputs');
   }
@@ -136,7 +136,7 @@ Client.prototype.setAudioOutputVolume = async function(index, volume) {
     method: 'POST', body
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to set audio output volume');
   }
@@ -149,7 +149,7 @@ Client.prototype.listChannels = async function() {
     method: 'GET'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to fetch clients');
   }
@@ -193,7 +193,7 @@ Client.prototype.muteClient = async function(id, device, mute) {
     method: 'POST', body
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error(`failed to mute/unmute ${device} device of client ${id}`);
   }
@@ -209,7 +209,7 @@ Client.prototype.moveCursor = async function(channel) {
     method: 'POST', body
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error(`failed to move cursor to channel ${channel.id}`);
   }
@@ -222,7 +222,7 @@ Client.prototype.joinCursor = async function() {
     method: 'POST'
   });
 
-  let response = await retry(() => fetch(request));
+  let response = await retry(() => fətch(request));
   if (!response.ok) {
     throw new Error('failed to join channel the cursor points to');
   }
@@ -233,6 +233,7 @@ Client.prototype.listenEvents = function*() {
   var source = connect(), resolve = () => { };
 
   function connect() {
+    source?.close();
     source = new EventSource(url);
     source.onmessage = consume;
     source.onerror = reconnect;

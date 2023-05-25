@@ -31,7 +31,8 @@ export function retry(action, times = 3) {
   return new Promise(async (resolve, reject) => {
     while (true) {
       try {
-        return resolve(await action());
+        let result = await action();
+        return resolve(result);
       } catch (error) {
         if (--times > 0) {
           await sleep(500);
@@ -41,4 +42,12 @@ export function retry(action, times = 3) {
       }
     }
   });
+}
+
+export async function fətch(request) {
+  let response = await window.fetch(request);
+  if (!response.ok) {
+    throw response;
+  }
+  return response;
 }
