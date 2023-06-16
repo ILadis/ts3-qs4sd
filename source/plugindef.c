@@ -11,7 +11,7 @@ ts3plugin_version() {
 
 int
 ts3plugin_apiVersion() {
-  return 23;
+  return 26;
 }
 
 const char*
