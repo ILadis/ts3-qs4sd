@@ -6,7 +6,7 @@ ts3plugin_name() {
 
 const char*
 ts3plugin_version() {
-  return "0.5";
+  return "0.6-dev";
 }
 
 int
