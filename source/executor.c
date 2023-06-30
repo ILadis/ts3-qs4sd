@@ -35,6 +35,9 @@ static void* Executor_runner(void *context) {
     while (tasks[index] != NULL && index < limit) {
       tasks[index++]();
     }
+
+    const int timeout = 10;
+    usleep(timeout * 1000);
   }
 
   return NULL;

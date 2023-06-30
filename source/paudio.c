@@ -79,7 +79,9 @@ bool PAudio_runLoop(struct PAudio *paudio) {
   pa_proplist *proplist = paudio->proplist;
 
   PAudio_guardContextIsset(paudio, false);
-  int result = pa_mainloop_iterate(mainloop, 0, NULL);
+
+  const int timeout = 10;
+  int result = pa_mainloop_prepare(mainloop, timeout * 1000);
 
   if (result < 0) {
     pa_mainloop_free(mainloop);
@@ -92,6 +94,9 @@ bool PAudio_runLoop(struct PAudio *paudio) {
 
     return false;
   }
+
+  pa_mainloop_poll(mainloop);
+  pa_mainloop_dispatch(mainloop);
 
   int errno = pa_context_errno(paudio->context);
   if (errno != 0) {

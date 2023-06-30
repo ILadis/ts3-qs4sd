@@ -98,7 +98,7 @@ bool SDInput_pollState(struct SDInput *input) {
   }
 
   unsigned char data[64] = {0};
-  const int timeout = 500;
+  const int timeout = 10;
 
   struct pollfd pfd = { .fd = fd, .events = POLLIN };
   int result = poll(&pfd, 1, timeout);
