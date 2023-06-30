@@ -14,7 +14,7 @@ Modules.extractors = function*(cb) {
     [0],
     [(_, __, i) => {
       for (let mod in i.c) {
-        cb(mod, i.c[mod]);
+        cb(mod, i.c[mod].exports);
       }
     }]
   ];
@@ -25,7 +25,7 @@ Modules.extractors = function*(cb) {
     {
       [id]: (_, __, i) => {
         for (let mod in i.c) {
-          cb(mod, i.c[mod]);
+          cb(mod, i.c[mod].exports);
         }
       },
     },
@@ -48,7 +48,7 @@ Modules.fromWebpack = function(entrypoint = 'webpackJsonp') {
   const modules = new Modules();
 
   const webpack = window[entrypoint] || window.opener[entrypoint];
-  const extractors = Modules.extractors((name, module) => modules.add(name, module.exports));
+  const extractors = Modules.extractors((name, module) => modules.add(name, module));
 
   for (let extractor of extractors) {
     if (modules.count() > 0) break;
@@ -78,7 +78,9 @@ Modules.prototype.find = function(query) {
   
   for (let key in this.modules) {
     const module = this.modules[key];
-    if (module === undefined) continue;
+    if (module === undefined || module === null) {
+      continue;
+    }
 
     let result = query(module);
 

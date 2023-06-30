@@ -1,3 +1,6 @@
 .vscode/
 include/vendor
+decky/service/PluginLoader
+plugin/dist
+plugin/node_modules
 *.so

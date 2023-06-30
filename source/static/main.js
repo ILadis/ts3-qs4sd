@@ -17,7 +17,7 @@ async function main() {
   content.appendChild(views.panel);
   views.panel.addStyles('/static/styles.css');
 
-  let client = new Client(); // for testing use endpoint: 'http://localhost:8000/api'
+  let client = new Client();
   let events = client.listenEvents();
 
   let server = await retry(() => client.getServer(), Infinity);

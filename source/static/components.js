@@ -1,6 +1,6 @@
 import { Modules } from './modules';
 
-let modules = Modules.fromWebpack();
+let modules = Modules.fromWebpack('webpackChunksteamui');
 
 export const [React] = modules.find(module => {
   if (typeof module !== 'object') return false;
