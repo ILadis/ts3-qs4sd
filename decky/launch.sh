@@ -9,10 +9,10 @@ export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LIVE_RELOAD=1
 export LOG_LEVEL=DEBUG
 
-if [ ! -f "${SELF_DIR}/service/PluginLoader" ]; then
-  mkdir -p "${SELF_DIR}/service"
+if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
+  mkdir -p "${SELF_DIR}/services"
   wget 'https://github.com/SteamDeckHomebrew/decky-loader/releases/download/v2.10.1/PluginLoader' \
-    -qO "${SELF_DIR}/service/PluginLoader"
+    -qO "${SELF_DIR}/services/PluginLoader"
 fi
 
 # For testing on Steam Deck setup port forwarding between
@@ -21,5 +21,5 @@ fi
 # $ ssh -T -L 8080:127.0.0.1:8080 deck
 # $ ssh -T -R 1337:127.0.0.1:1337 deck
 
-chmod +x "${SELF_DIR}/service/PluginLoader"
-exec "${SELF_DIR}/service/PluginLoader"
+chmod +x "${SELF_DIR}/services/PluginLoader"
+exec "${SELF_DIR}/services/PluginLoader"

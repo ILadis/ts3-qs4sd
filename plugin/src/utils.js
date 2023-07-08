@@ -3,6 +3,10 @@ export function sleep(millis) {
   return new Promise(resolve => window.setTimeout(resolve, millis));
 }
 
+export function dispatch(action) {
+  window.setTimeout(action, 0);
+}
+
 export function retry(action, times = 3) {
   return new Promise(async (resolve, reject) => {
     while (true) {

@@ -250,6 +250,8 @@ Client.prototype.listenEvents = function*() {
   }
 
   while (true) {
-    yield new Promise(r => resolve = r);
+    let next = new Promise(r => resolve = r);
+    next.cancel = () => source?.close();
+    yield next;
   }
 };

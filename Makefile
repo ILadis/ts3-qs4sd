@@ -12,7 +12,7 @@ TARGET   := ts3-qs4sd.so
 # toolchain and flags
 CC       := gcc
 
-.PHONY : clean vendor run
+.PHONY : clean vendor plugin run
 
 all: clean $(TARGET)
 
@@ -34,6 +34,10 @@ vendor:
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamspeak/clientlib_publicdefinitions.h -qO include/vendor/teamspeak/clientlib_publicdefinitions.h
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamspeak/public_definitions.h -qO include/vendor/teamspeak/public_definitions.h
 	@wget https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamspeak/public_rare_definitions.h -qO include/vendor/teamspeak/public_rare_definitions.h
+
+plugin:
+	@npm --prefix plugin/ run build
+	@zip plugin.zip plugin/package.json plugin/plugin.json plugin/main.py plugin/dist/index.js
 
 run:
 	teamspeak3

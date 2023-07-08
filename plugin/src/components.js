@@ -10,27 +10,46 @@ import {
   PanelSectionRow,
 } from 'decky-frontend-lib';
 
-export function QuickAccessPanel(props) {
+import styles from './styles';
+
+export function TS3QuickAccessPanel(props) {
   return (
-    props.content == 'bookmarks' ? $(TS3BookmarkList, props) :
-    props.content == 'dashboard' ? $(TS3Dashboard, props) : $('div')
+    $(Focusable, null,
+      $('style', null, styles),
+      props.content == 'bookmarks' ? $(TS3BookmarkList, props) :
+      props.content == 'dashboard' ? $(TS3Dashboard, props) : $('div')
+    )
   );
 }
 
-export function TS3BookmarkList({ bookmarks, bookmarkSelected }) {
+export function TS3BookmarkList(props) {
+  const {
+    bookmarks,
+    connectTo,
+  } = props;
+
   return (
     $(PanelSection, { title: 'SERVERS' },
       $(PanelSectionRow, null, bookmarks.map(bookmark =>
-        $(Field, { onClick: () => bookmarkSelected(bookmark), label: bookmark.name })),
+        $(Field, { onClick: () => connectTo(bookmark), label: bookmark.name })),
       )
     )
   );
 }
 
-export function TS3Dashboard({ server, self, channels, outputs, toggleOutputs, toggleMute, outputChanged, disconnectClicked }) {
+export function TS3Dashboard(props) {
+  const {
+    server,
+    channels,
+    outputs,
+    toggleOutputs,
+    outputChanged,
+    joinChannel,
+  } = props;
+
   return (
     $(PanelSection, { title: server.name },
-      $(PanelSectionRow, null, $(TS3DashboardActions, { self, toggleMute, disconnectClicked })),
+      $(PanelSectionRow, null, $(TS3DashboardActions, props)),
 
       $(PanelSectionRow, null,
         $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
@@ -39,12 +58,18 @@ export function TS3Dashboard({ server, self, channels, outputs, toggleOutputs, t
       ),
 
       outputs.map(output => $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged }))),
-      channels.map(channel => $(PanelSectionRow, null, $(TS3ClientList, { channel }))),
+      channels.map(channel => $(PanelSectionRow, null, $(TS3ClientList, { channel, joinChannel }))),
     )
   );
 }
 
-export function TS3DashboardActions({ self, toggleMute, disconnectClicked }) {
+export function TS3DashboardActions(props) {
+  const {
+    self,
+    toggleMute,
+    disconnect,
+  } = props;
+
   const inputMuted  = self.muted['input'];
   const outputMuted = self.muted['output'];
 
@@ -58,43 +83,39 @@ export function TS3DashboardActions({ self, toggleMute, disconnectClicked }) {
       $(Focusable, { style },
         $(TS3IconButton, { onClick: () => toggleMute('input'), icon: $(TS3InputMute, { state: inputMuted }) }),
         $(TS3IconButton, { onClick: () => toggleMute('output'), icon: $(TS3OutputMute, { state: outputMuted }) }),
-        $(DialogButton, { onClick: () => disconnectClicked() }, 'Disconnect'),
+        $(DialogButton, { onClick: () => disconnect() }, 'Disconnect'),
       )
     )
   );
 }
 
-export function TS3OutputDevice({ output, outputChanged }) {
+export function TS3OutputDevice(props) {
+  const {
+    output,
+    outputChanged,
+  } = props;
+
   return (
     $(SliderField, {
       label: output.name,
       value: output.volume,
       onChange: (value) => outputChanged(output, value),
-      min: 0,
-      max: 1,
+      min: 0, max: 1,
       step: 0.05
     })
   );
 }
 
-export function TS3ClientList({ channel }) {
-  const style = {
-    'display': 'inline-block',
-    'maxWidth': '100%',
-    'padding': '0',
-    'margin': '0',
-    'fontSize': '14px',
-    'fontWeight': 'normal',
-    'lineHeight': '22px',
-    'color': '#c5d6d4',
-    'whiteSpace': 'nowrap',
-    'textOverflow': 'ellipsis',
-    'overflow': 'hidden',
-  };
+export function TS3ClientList(props) {
+  const {
+    channel,
+    joinChannel,
+  } = props;
 
+  // TODO display number of clients in channel
   return (
-    $(Field, { childrenLayout: 'below' },
-      $(Focusable, null, $('h3', { style }, channel.name)),
+    $(Field, { childrenLayout: 'below', onClick: () => joinChannel(channel) },
+      $(Focusable, null, $('h3', { className: 'client-headline' }, channel.name)),
       $(Focusable, null, channel.clients.map(client =>
         $(TS3ClientItem, { client })
       ))
@@ -103,44 +124,21 @@ export function TS3ClientList({ channel }) {
 }
 
 export function TS3ClientItem({ client }) {
-  const style = {
-    'display': 'block',
-    'lineHeight': '15px',
-    'whiteSpace': 'nowrap',
-    'textOverflow': 'ellipsis',
-    'overflow': 'hidden',
-  };
-
   return (
     $(Field, { label: $(TS3ClientAvatar), childrenContainerWidth: 'max', bottomSeparator: 'none' },
-      $('span', { style: { ...style, 'fontSize': '15px', 'color': '#b3dfff' } }, client.nickname),
-      $('span', { style: { ...style, 'fontSize': '12px', 'color': '#4cb4ff' } }, 'Online'),
+      $('span', { className: 'client-item nickname' }, client.nickname),
+      $('span', { className: 'client-item status' }, 'Online'),
     )
   );
 }
 
 export function TS3ClientAvatar() {
-  const style = {
-    'margin': 0,
-    'width': '32px',
-    'height': '32px',
-    'border-right': '2px solid #6dcff6'
-  };
-
   const url = 'https://avatars.cloudflare.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg';
-
-  return $('figure', { style }, $('img', { src: url, width: '100%', height: '100%' }));
+  return $('figure', { className: 'client-avatar' }, $('img', { src: url, width: '100%', height: '100%' }));
 }
 
 export function TS3IconButton({ icon, onClick }) {
-  const style = {
-    'padding': '7px 10px 4px',
-    'width': 'auto',
-    'min-width': 0,
-    'flex-shrink': 0
-  };
-
-  return $(DialogButton, { style, onClick }, icon);
+  return $(DialogButton, { className: 'icon-button', onClick }, icon);
 }
 
 export function TS3InputMute({ state }) {
@@ -151,7 +149,7 @@ export function TS3InputMute({ state }) {
 
   return (
     $('svg', { viewBox: '0 0 48 48', width: '24px' },
-      $('path', { fill: 'currentColor', 'd': paths[state] })
+      $('path', { fill: 'currentColor', 'd': paths[state] || '' })
     )
   );
 }
@@ -164,8 +162,16 @@ export function TS3OutputMute({ state }) {
 
   return (
     $('svg', { viewBox: '0 0 48 48', width: '24px' },
-      $('path', { fill: 'currentColor', 'd': paths[state] })
+      $('path', { fill: 'currentColor', 'd': paths[state] || '' })
     )
   );
 }
 
+export function TS3LogoIcon() {
+  const path = 'M407 336c5 5 9 18 9 26s0 15-2 21c0 3-6 33-43 51l-23 8-14 3c-64 12-148-3-84-10l17-2a1532 1532 0 0042-10h1a19086 19086 0 0012-4c16-7 33-16 47-29 10-10 19-22 26-37l6-15c0-2 4-3 6-2zm-60-56c17-3 28 5 29 19 1 13-3 25-13 35-8 9-18 13-32 12a249 249 0 01-40-5c-19-5-26-19-14-30 7-7 16-12 25-16l23-9c7-3 15-5 22-6zm-211-15c3-18 18-26 34-18a1135 1135 0 0142 28 141 141 0 0133 39l1 10c-2 10-9 15-18 19l-13 1h-19l-16-2c-15-1-26-7-34-19a77 77 0 01-10-58zm256-153l3 2c4 4 8 9 3 16l-1 1v2l2 2c16 22 27 46 32 73l2 4 2 1c14 7 21 18 21 33v19l-1 21c-4 20-23 33-42 29-6-1-7-6-7-11a11534 11534 0 010-66 150 150 0 00-300-1v69c0 6-4 9-10 9-24 1-40-14-40-38v-27l1-10c2-12 8-21 19-27h1l1-1c2-1 3-3 3-5 5-26 15-50 30-71l2-3v-5c-3-4-1-7 1-11h1c22-25 48-43 80-53 75-23 141-7 197 48z';
+  return (
+    $('svg', { viewBox: '0 0 460 460', width: '20px' },
+      $('path', { fill: 'currentColor', 'd': path })
+    )
+  );
+}

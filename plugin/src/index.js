@@ -3,8 +3,8 @@ import { createElement as $, useState, useEffect } from 'react';
 import { definePlugin } from 'decky-frontend-lib';
 
 import { Client } from './client';
-import * as Views from './view';
-import { retry } from './utils.js'
+import { TS3QuickAccessPanel, TS3LogoIcon } from './components';
+import { retry, dispatch } from './utils.js'
 
 function App({ client }) {
   const [content, setContent] = useState(null);
@@ -14,10 +14,19 @@ function App({ client }) {
   const [self, setSelf] = useState(null);
   const [outputs, setOutputs] = useState([]);
 
-  let debounce = Promise.resolve();
+  let queue = Promise.resolve();
 
-  function bookmarkSelected(bookmark) {
+  function connectTo(bookmark) {
     client.connect(bookmark.uuid);
+  }
+
+  async function joinChannel(channel) {
+    await client.moveCursor(channel);
+    await client.joinCursor();
+  }
+
+  function disconnect() {
+    client.disconnect();
   }
 
   async function toggleMute(device) {
@@ -49,14 +58,20 @@ function App({ client }) {
     setOutputs((outputs) => outputs.map(output => {
       if (output.index === index) {
         output.volume = volume;
-        debounce = debounce.then(() => client.setAudioOutputVolume(index, volume));
+        queue = queue.then(() => client.setAudioOutputVolume(index, volume));
       }
       return output;
     }));
   }
 
-  function disconnectClicked() {
-    client.disconnect();
+  async function restoreState() {
+    const server = await retry(() => client.getServer(), Infinity);
+
+    if (server.status == 0) {
+      refreshBookmarksState();
+    } else {
+      refreshDashboardState();
+    }
   }
 
   function handleEvent(event) {
@@ -69,19 +84,18 @@ function App({ client }) {
     states[event.type]?.();
   }
 
-  async function restoreState() {
+  function listenEvents() {
     const events = client.listenEvents();
-    const server = await retry(() => client.getServer(), Infinity);
+    let promise = null;
 
-    if (server.status == 0) {
-      refreshBookmarksState();
-    } else {
-      refreshDashboardState();
+    async function nextEvent() {
+      promise = events.next().value;
+      promise.then(handleEvent).then(nextEvent);
     }
 
-    for await (let event of events) {
-      handleEvent(event);
-    }
+    dispatch(nextEvent);
+
+    return () => promise?.cancel();
   }
 
   async function refreshBookmarksState() {
@@ -107,10 +121,10 @@ function App({ client }) {
     setContent('dashboard');
   }
 
-  useEffect(() => restoreState(), []);
+  useEffect(() => (restoreState(), listenEvents()), []);
 
   return (
-    $(Views.QuickAccessPanel, {
+    $(TS3QuickAccessPanel, {
       // states
       content,
       bookmarks,
@@ -118,19 +132,15 @@ function App({ client }) {
       channels,
       self,
       outputs,
-      // callbacks
-      bookmarkSelected,
+      // actions
+      connectTo,
+      joinChannel,
+      disconnect,
       toggleMute,
       toggleOutputs,
+      // events
       outputChanged,
-      disconnectClicked,
     })
-  );
-}
-
-function Icon() {
-  return (
-    $('div', null, '(!)')
   );
 }
 
@@ -139,6 +149,6 @@ export default definePlugin(server => {
 
   return {
     content: $(App, { client }),
-    icon: $(Icon),
+    icon: $(TS3LogoIcon),
   };
 });

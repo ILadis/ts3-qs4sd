@@ -7,10 +7,10 @@
     "build": "rollup -c"
   },
   "dependencies": {
-    "decky-frontend-lib": "3.x"
+    "decky-frontend-lib": "3.x",
+    "react": "16.x"
   },
   "devDependencies": {
-    "@types/react": "16.x",
     "rollup": "3.x"
   }
 }
