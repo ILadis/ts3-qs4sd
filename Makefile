@@ -37,6 +37,7 @@ vendor:
 
 plugin:
 	@npm --prefix plugin/ run build
+	@rm -rf plugin.zip
 	@zip plugin.zip plugin/package.json plugin/plugin.json plugin/main.py plugin/dist/index.js
 
 run:

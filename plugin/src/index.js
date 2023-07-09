@@ -6,7 +6,7 @@ import { Client } from './client';
 import { TS3QuickAccessPanel, TS3LogoIcon } from './components';
 import { retry, dispatch } from './utils.js'
 
-function App({ client }) {
+function App({ client, serverAPI }) {
   const [content, setContent] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [server, setServer] = useState(null);
@@ -65,6 +65,9 @@ function App({ client }) {
   }
 
   async function restoreState() {
+    const result = await serverAPI.callPluginMethod('start', { });
+    console.log(result);
+
     const server = await retry(() => client.getServer(), Infinity);
 
     if (server.status == 0) {
@@ -144,11 +147,11 @@ function App({ client }) {
   );
 }
 
-export default definePlugin(server => {
+export default definePlugin(serverAPI => {
   const client = new Client('http://localhost:8000/api');
 
   return {
-    content: $(App, { client }),
+    content: $(App, { client, serverAPI }),
     icon: $(TS3LogoIcon),
   };
 });

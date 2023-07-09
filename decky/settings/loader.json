@@ -3,5 +3,6 @@
     "pluginOrder": [],
     "user_info.user_name": "ladis",
     "user_info.user_home": "/home/ladis",
-    "store-url": 0
+    "store-url": 0,
+    "cef_forward": true
 }
