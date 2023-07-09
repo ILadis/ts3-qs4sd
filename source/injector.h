@@ -11,6 +11,7 @@ struct Injector {
     STATE_FETCH_WS_URL = 1,
     STATE_EVALUATE_JS_CODE,
     STATE_RETRY,
+    STATE_DISABLED = -1,
   } state;
 
   char wsUrl[250];

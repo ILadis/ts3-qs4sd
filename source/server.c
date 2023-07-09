@@ -121,6 +121,7 @@ static void* mg_server_thread(void *context) {
   Logger_infoLog("Server (API) thread started");
 
   struct Injector *injector = Injector_createNew(manager);
+  Injector_setState(injector, STATE_DISABLED);
 
   char injectUrl[60];
   snprintf(injectUrl, sizeof(injectUrl), "http://localhost:%hu/static/main.js", server->port);
