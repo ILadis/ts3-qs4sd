@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import decky_plugin
@@ -12,10 +13,14 @@ class Plugin:
   async def start(plugin):
     decky_plugin.logger.info('Attempt to starting TeamSpeak 3')
 
+    result = plugin.teamspeak.install_plugin()
+    if result is False:
+      decky_plugin.logger.error('Could not install TeamSpeak 3 client plugin')
+
     plugin.teamspeak.start()
 
     running = plugin.teamspeak.is_running(1)
-    pid = plugin.teamspeak.getpid()
+    pid = plugin.teamspeak.get_processid()
 
     if running:
       decky_plugin.logger.info('TeamSpeak running with pid: ' + str(pid))
@@ -30,10 +35,9 @@ class Plugin:
     plugin.teamspeak.stop()
 
     running = plugin.teamspeak.is_running(1)
-    rc = plugin.teamspeak.getrc()
 
     if running:
-      decky_plugin.logger.info('TeamSpeak stopped with rc: ' + str(rc))
+      decky_plugin.logger.info('TeamSpeak stopped')
     else:
       decky_plugin.logger.info('TeamSpeak not stopped')
 
@@ -45,15 +49,22 @@ class TeamSpeak:
     self.process = None
 
   def start(self):
+    if self.is_running():
+      return
+
     env = dict(os.environ)
-    env['XDG_RUNTIME_DIR'] = '/var/run/user/1000'
     env['DISPLAY'] = ':0'
 
-    if not self.is_running():
+    try:
       self.process = subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak'], env=env, user='deck')
+    except:
+      pass
 
   def stop(self):
-    subprocess.Popen(['flatpak', 'kill', 'com.teamspeak.TeamSpeak'], user='deck')
+    try:
+      subprocess.Popen(['flatpak', 'kill', 'com.teamspeak.TeamSpeak'], user='deck')
+    except:
+      pass
 
     if self.process is not None:
       self.process.wait()
@@ -75,14 +86,25 @@ class TeamSpeak:
 
     return self.process.returncode is None
 
-  def getpid(self):
+  def get_processid(self):
     if self.process is None:
       return None
     else:
       return self.process.pid
 
-  def getrc(self):
-    if self.process is None:
-      return None
-    else:
-      return self.process.returncode
+  def install_plugin(self):
+    plugindir = os.getenv('DECKY_PLUGIN_DIR')
+    homedir = os.getenv('HOME')
+
+    filename = 'ts3-qs4sd.so'
+    srcfile = plugindir + '/bin/' + filename
+    dstfile = homedir + '/.var/app/com.teamspeak.TeamSpeak/.ts3client/plugins/' + filename
+
+    if os.path.exists(dstfile):
+      os.chmod(dstfile, 0o755)
+
+    try:
+      shutil.copy(srcfile, dstfile)
+      return True
+    except e:
+      return False
