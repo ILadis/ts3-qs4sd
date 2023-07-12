@@ -4,3 +4,5 @@ backend/out
 decky/services
 dist/
 node_modules/
+*.zip
+*.so

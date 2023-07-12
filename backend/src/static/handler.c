@@ -4,14 +4,14 @@
 
 #include "resource.h"
 
-INCBIN(main_js, "source/static/main.js");
-INCBIN(modules_js, "source/static/modules.js");
-INCBIN(components_js, "source/static/components.js");
-INCBIN(views_js, "source/static/views.js");
-INCBIN(utils_js, "source/static/utils.js");
-INCBIN(client_js, "source/static/client.js");
-INCBIN(styles_css, "source/static/styles.css");
-INCBIN(logo_svg, "source/static/logo.svg");
+INCBIN(main_js, "src/static/main.js");
+INCBIN(modules_js, "src/static/modules.js");
+INCBIN(components_js, "src/static/components.js");
+INCBIN(views_js, "src/static/views.js");
+INCBIN(utils_js, "src/static/utils.js");
+INCBIN(client_js, "src/static/client.js");
+INCBIN(styles_css, "src/static/styles.css");
+INCBIN(logo_svg, "src/static/logo.svg");
 
 static struct mg_resource resources[] = {
   mg_resource_of("/static/main.js", "text/javascript", main_js),

@@ -1,7 +1,7 @@
 
 const char*
 ts3plugin_name() {
-  return "Quick Settings for Steam Deck";
+  return "Quick Access for Steam Deck";
 }
 
 const char*
@@ -21,5 +21,5 @@ ts3plugin_author() {
 
 const char*
 ts3plugin_description() {
-  return "Quick Settings for Steam Deck";
+  return "Quick Access for Steam Deck";
 }

@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+
 #include "../vnd/ts3_functions.h"
 #include "../vnd/teamspeak/public_rare_definitions.h"
 

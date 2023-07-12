@@ -1,11 +1,11 @@
 
 # source and target files
-CFILES   := $(wildcard source/*.c) $(wildcard source/api/*.c) \
-            $(wildcard source/injector/*.c) $(wildcard source/injector/states/*.c) \
-            $(wildcard source/static/*.c)
+CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c) \
+            $(wildcard src/injector/*.c) $(wildcard src/injector/states/*.c) \
+            $(wildcard src/static/*.c)
 
 CFILES   += vnd/mongoose.c vnd/mjson.c
-CFLAGS   := -O2 -Wall -fPIC -I. -include vnd/glibc_2.27.h -pthread
+CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
 CFLAGS   += `pkg-config --cflags --libs libpulse`
 TARGET   := ts3-qs4sd.so
 
@@ -15,12 +15,12 @@ CC       := gcc
 .PHONY : clean vendor plugin run
 
 all: clean $(TARGET)
-	mkdir -p out/
-	mv $(TARGET) out/
+	@mkdir -p out/
+	@mv $(TARGET) out/
 
-install: $(TARGET)
+install:
 	@mkdir -p ~/.ts3client/plugins/
-	@cp -f $(TARGET) ~/.ts3client/plugins/
+	@cp -f out/$(TARGET) ~/.ts3client/plugins/
 
 vendor:
 	@mkdir -p vnd/teamspeak/teamlog
