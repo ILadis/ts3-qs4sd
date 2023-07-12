@@ -7,11 +7,12 @@ export PRIVILIGED_PATH="${SELF_DIR}"
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 
 export LIVE_RELOAD=1
-export LOG_LEVEL=DEBUG
+export LOG_LEVEL='DEBUG'
+export DECKY_VERSION='v2.10.1'
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"
-  wget 'https://github.com/SteamDeckHomebrew/decky-loader/releases/download/v2.10.1/PluginLoader' \
+  wget "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/${DECKY_VERSION}/PluginLoader" \
     -qO "${SELF_DIR}/services/PluginLoader"
 fi
 
