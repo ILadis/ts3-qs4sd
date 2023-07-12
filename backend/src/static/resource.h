@@ -4,7 +4,7 @@
 #define INCBIN_PREFIX g_
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 
-#include <vendor/incbin.h>
+#include "../vnd/incbin.h>
 
 struct mg_resource {
   const char *path;

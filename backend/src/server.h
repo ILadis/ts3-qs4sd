@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include <vendor/mongoose.h>
-#include <vendor/mjson.h>
+#include "../vnd/mongoose.h>
+#include "../vnd/mjson.h>
 
 struct mg_server {
   volatile bool running;

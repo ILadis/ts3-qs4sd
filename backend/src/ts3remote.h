@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <vendor/ts3_functions.h>
-#include <vendor/teamspeak/public_rare_definitions.h>
+#include "../vnd/ts3_functions.h"
+#include "../vnd/teamspeak/public_rare_definitions.h"
 
 /* A sample plugin can be found here:
  * https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/blob/master/src/plugin.c

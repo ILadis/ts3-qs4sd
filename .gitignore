@@ -1,6 +1,6 @@
 .vscode/
-include/vendor
+backend/vnd
+backend/out
 decky/services
-plugin/dist
-plugin/node_modules
-*.so
+dist/
+node_modules/
