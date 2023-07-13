@@ -1,9 +1,31 @@
 
 import { retry, sleep, fətch } from './utils.js'
 
-export function Client(endpoint) {
+export function Client(endpoint, api) {
   let self = new URL(import.meta.url);
   this.endpoint = endpoint || (self.origin + '/api');
+  this.api = api;
+}
+
+Client.prototype.getStatus = async function() {
+  let response = await this.api.callPluginMethod('status', { });
+  if (!response.success) {
+    throw new Error('failed to fetch status');
+  }
+
+  let result = response.result;
+
+  return {
+    'running': Boolean(result['running']),
+    'installed': Boolean(result['installed']),
+  };
+};
+
+Client.prototype.start = async function() {
+  let response = await this.api.callPluginMethod('start', { });
+  if (!response.success) {
+    throw new Error('failed to start instance');
+  }
 }
 
 Client.prototype.connect = async function(uuid) {

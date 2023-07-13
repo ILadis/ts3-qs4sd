@@ -13,11 +13,31 @@ import {
 import styles from './styles';
 
 export function TS3QuickAccessPanel(props) {
+  const content = ({
+    'setup':     TS3SetupHints,
+    'bookmarks': TS3BookmarkList,
+    'dashboard': TS3Dashboard,
+  })[props.content];
+
   return (
     $(Focusable, null,
       $('style', null, styles),
-      props.content == 'bookmarks' ? $(TS3BookmarkList, props) :
-      props.content == 'dashboard' ? $(TS3Dashboard, props) : $('div')
+      $(content || 'div', props)
+    )
+  );
+}
+
+export function TS3SetupHints() {
+  return (
+    $(PanelSection, null,
+      $(PanelSectionRow, null,
+        $(Field, { label: 'SETUP' }, ''
+          + 'TeamSpeak 3 is not installed. Please switch to gaming mode and '
+          + 'download TeamSpeak 3 from the Discover store. Make sure to add '
+          + 'all TeamSpeak servers you want to connect to as bookmarks. '
+          + 'Then come back here.'
+        ),
+      )
     )
   );
 }

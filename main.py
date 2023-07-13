@@ -11,7 +11,7 @@ class Plugin:
     plugin.teamspeak = TeamSpeak()
 
   async def start(plugin):
-    decky_plugin.logger.info('Attempt to starting TeamSpeak 3')
+    decky_plugin.logger.debug('Attempt to starting TeamSpeak 3')
 
     result = plugin.teamspeak.install_plugin()
     if result is False:
@@ -19,15 +19,21 @@ class Plugin:
 
     plugin.teamspeak.start()
 
+  async def status(plugin):
+    installed = plugin.teamspeak.is_installed()
+    running = plugin.teamspeak.is_running()
+
+    decky_plugin.logger.debug(f'Querying TeamSpeak 3 status: installed={installed}, running={running}')
+
+    return dict(running = running, installed = installed)
+
   async def stop(plugin):
-    decky_plugin.logger.info('Attempt to stop TeamSpeak 3')
+    decky_plugin.logger.debug('Attempt to stop TeamSpeak 3')
     plugin.teamspeak.stop()
 
   async def _unload(plugin):
-    decky_plugin.logger.info('Unloading plugin, attempt to stop TeamSpeak 3')
+    decky_plugin.logger.debug('Unloading plugin, attempt to stop TeamSpeak 3')
     plugin.teamspeak.stop()
-
-  # TODO consider function to install teamspeak / check for flatpak installation
 
 class TeamSpeak:
 
@@ -52,12 +58,25 @@ class TeamSpeak:
     except:
       pass
 
+  def is_installed(self):
+    try:
+      result = subprocess.check_output(['flatpak', 'list'], encoding='utf-8')
+      return 'com.teamspeak.TeamSpeak' in result
+    except:
+      return False
+
   def is_running(self):
     try:
       result = subprocess.check_output(['flatpak', 'ps'], encoding='utf-8')
       return 'com.teamspeak.TeamSpeak' in result
     except:
       return False
+
+  def install_flatpak(self):
+    try:
+      subprocess.Popen(['flatpak', 'install', 'com.teamspeak.TeamSpeak3', '--noninteractive'])
+    except:
+      pass
 
   def install_plugin(self):
     plugindir = os.getenv('DECKY_PLUGIN_DIR')
@@ -68,8 +87,8 @@ class TeamSpeak:
       return False
 
     filename = 'ts3-qs4sd.so'
-    srcfile = plugindir + '/bin/' + filename
-    dstfile = homedir + '/.var/app/com.teamspeak.TeamSpeak/.ts3client/plugins/' + filename
+    srcfile = f'{plugindir}/bin/{filename}'
+    dstfile = f'{homedir}/.var/app/com.teamspeak.TeamSpeak/.ts3client/plugins/{filename}'
 
     if os.path.exists(dstfile):
       os.chmod(dstfile, 0o755)
