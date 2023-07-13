@@ -65,9 +65,7 @@ function App({ client, serverAPI }) {
   }
 
   async function restoreState() {
-    const result = await serverAPI.callPluginMethod('start', { });
-    console.log(result);
-
+    await serverAPI.callPluginMethod('start', { });
     const server = await retry(() => client.getServer(), Infinity);
 
     if (server.status == 0) {

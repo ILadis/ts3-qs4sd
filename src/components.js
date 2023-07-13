@@ -112,10 +112,11 @@ export function TS3ClientList(props) {
     joinChannel,
   } = props;
 
-  // TODO display number of clients in channel
   return (
     $(Field, { childrenLayout: 'below', onClick: () => joinChannel(channel) },
-      $(Focusable, null, $('h3', { className: 'client-headline' }, channel.name)),
+      $(Focusable, null, $('h3', { className: 'channel-headline' },
+        $('span', { className: 'channel-count' }, channel.clients.length), channel.name
+      )),
       $(Focusable, null, channel.clients.map(client =>
         $(TS3ClientItem, { client })
       ))

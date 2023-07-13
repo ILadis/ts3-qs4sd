@@ -1,6 +1,6 @@
 
 export default `
-.client-headline {
+.channel-headline {
   display: inline-block;
   max-width: 100%;
   padding: 0;
@@ -13,6 +13,16 @@ export default `
   text-overflow: ellipsis;
   overflow: hidden;
 }
+
+.channel-count {
+  margin-left: 4px;
+  font-size: 12px;
+  color: #8b929a;
+  float: right;
+}
+
+.channel-count::before { content: '('; }
+.channel-count::after  { content: ')'; }
 
 .client-item {
   display: block;
