@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: TeamSpeak 3 - Quick Settings for Steam Deck
+  title: TeamSpeak 3 - Quick Access for Steam Deck
   version: 0.0.1
 servers:
   - url: http://localhost:8000/api
