@@ -15,38 +15,21 @@ class Plugin:
 
     result = plugin.teamspeak.install_plugin()
     if result is False:
-      decky_plugin.logger.error('Could not install TeamSpeak 3 client plugin')
+      decky_plugin.logger.error('Could not install TeamSpeak 3 client plugin, maybe TeamSpeak 3 is already running')
 
     plugin.teamspeak.start()
 
-    running = plugin.teamspeak.is_running(1)
-    pid = plugin.teamspeak.get_processid()
-
-    if running:
-      decky_plugin.logger.info('TeamSpeak running with pid: ' + str(pid))
-    else:
-      decky_plugin.logger.info('TeamSpeak not started')
-
-    return dict(running = running)
+  async def stop(plugin):
+    decky_plugin.logger.info('Attempt to stop TeamSpeak 3')
+    plugin.teamspeak.stop()
 
   async def _unload(plugin):
     decky_plugin.logger.info('Unloading plugin, attempt to stop TeamSpeak 3')
-
     plugin.teamspeak.stop()
-
-    running = plugin.teamspeak.is_running(1)
-
-    if running:
-      decky_plugin.logger.info('TeamSpeak stopped')
-    else:
-      decky_plugin.logger.info('TeamSpeak not stopped')
 
   # TODO consider function to install teamspeak / check for flatpak installation
 
 class TeamSpeak:
-
-  def __init__(self):
-    self.process = None
 
   def start(self):
     if self.is_running():
@@ -56,45 +39,33 @@ class TeamSpeak:
     env['DISPLAY'] = ':0'
 
     try:
-      self.process = subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak'], env=env, user='deck')
+      subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak'], env=env)
     except:
       pass
 
   def stop(self):
+    if not self.is_running():
+      return
+
     try:
-      subprocess.Popen(['flatpak', 'kill', 'com.teamspeak.TeamSpeak'], user='deck')
+      subprocess.run(['flatpak', 'kill', 'com.teamspeak.TeamSpeak'])
     except:
       pass
 
-    if self.process is not None:
-      self.process.wait()
-
-  def is_running(self, timeout = None):
-    if self.process is None:
-      return False
-
-    if self.process.returncode is not None:
-      return False
-
+  def is_running(self):
     try:
-      if timeout is not None:
-        self.process.wait(timeout)
-      else:
-        self.process.poll()
+      result = subprocess.check_output(['flatpak', 'ps'], encoding='utf-8')
+      return 'com.teamspeak.TeamSpeak' in result
     except:
-      pass
-
-    return self.process.returncode is None
-
-  def get_processid(self):
-    if self.process is None:
-      return None
-    else:
-      return self.process.pid
+      return False
 
   def install_plugin(self):
     plugindir = os.getenv('DECKY_PLUGIN_DIR')
     homedir = os.getenv('HOME')
+
+    # can not install plugin while teamspeak is running
+    if self.is_running():
+      return False
 
     filename = 'ts3-qs4sd.so'
     srcfile = plugindir + '/bin/' + filename
@@ -106,5 +77,5 @@ class TeamSpeak:
     try:
       shutil.copy(srcfile, dstfile)
       return True
-    except e:
+    except:
       return False
