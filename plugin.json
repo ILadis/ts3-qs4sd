@@ -5,6 +5,6 @@
   "publish": {
     "tags": ["teamspeak"],
     "description": "A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick access menu.",
-    "image": "https://raw.githubusercontent.com/ILadis/ts3-qs4sd/master/screenshot.jpg"
+    "image": "https://raw.githubusercontent.com/ILadis/ts3-qs4sd/master/screenshot2.png"
   }
 }
