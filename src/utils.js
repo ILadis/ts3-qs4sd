@@ -24,6 +24,37 @@ export function retry(action, times = 3) {
   });
 }
 
+export function debounce(action, millis = 200) {
+  let handle = null;
+  let queue = new Array();
+
+  return enqueue;
+
+  async function invoke() {
+    if (queue.length == 0) {
+      window.clearInterval(handle);
+      handle = null;
+    } else {
+      let [thisArg, argArray] = queue[0];
+      try {
+        await action.apply(thisArg, argArray);
+      } finally {
+        queue.shift();
+      }
+    }
+  }
+
+  function enqueue() {
+    queue.shift();
+    queue.push([this, arguments]);
+
+    if (handle == null) {
+      handle = window.setInterval(invoke, millis);
+      invoke();
+    }
+  }
+}
+
 export async function fətch(request) {
   let response = await window.fetch(request);
   if (!response.ok) {

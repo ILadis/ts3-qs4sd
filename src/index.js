@@ -4,7 +4,7 @@ import { definePlugin } from 'decky-frontend-lib';
 
 import { Client } from './client';
 import { TS3QuickAccessPanel, TS3LogoIcon } from './components';
-import { retry, dispatch } from './utils.js'
+import { retry, dispatch, debounce } from './utils.js'
 
 
 function App({ client }) {
@@ -14,8 +14,6 @@ function App({ client }) {
   const [channels, setChannels] = useState([]);
   const [self, setSelf] = useState(null);
   const [outputs, setOutputs] = useState([]);
-
-  let queue = Promise.resolve();
 
   function connectTo(bookmark) {
     client.connect(bookmark.uuid);
@@ -55,11 +53,11 @@ function App({ client }) {
 
   function outputChanged(output, volume) {
     const index = output.index;
+    client.setAudioOutputVolume(index, volume);
 
     setOutputs((outputs) => outputs.map(output => {
       if (output.index === index) {
         output.volume = volume;
-        queue = queue.then(() => client.setAudioOutputVolume(index, volume));
       }
       return output;
     }));
@@ -154,6 +152,8 @@ function App({ client }) {
 
 export default definePlugin(serverAPI => {
   const client = new Client('http://localhost:8000/api', serverAPI);
+
+  client.setAudioOutputVolume = debounce(client.setAudioOutputVolume.bind(client));
 
   return {
     content: $(App, { client }),
