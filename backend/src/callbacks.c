@@ -32,6 +32,7 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_connect_server());
   mg_server_add_handler(&server, mg_handler_disconnect_server());
   mg_server_add_handler(&server, mg_handler_get_clientlist());
+  mg_server_add_handler(&server, mg_handler_get_clientavatar());
   mg_server_add_handler(&server, mg_handler_get_self());
   mg_server_add_handler(&server, mg_handler_mute_toggle_self());
   mg_server_add_handler(&server, mg_handler_afk_toggle_self());

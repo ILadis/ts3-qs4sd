@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <string.h>
+#include <fcntl.h>
+
 #include "../vnd/ts3_functions.h"
 #include "../vnd/teamspeak/public_rare_definitions.h"
 
@@ -76,6 +79,7 @@ void TS3Remote_resetConnection(struct TS3Remote *remote);
 void TS3Remote_updateClient(struct TS3Remote *remote);
 void TS3Remote_updateClientWithId(struct TS3Remote *remote, anyID clientId);
 void TS3Remote_updateClientList(struct TS3Remote *remote);
+int  TS3Remote_openClientAvatar(struct TS3Remote *remote, anyID clientId);
 
 void TS3Remote_muteInput(struct TS3Remote *remote, bool mute);
 void TS3Remote_muteOutput(struct TS3Remote *remote, bool mute);

@@ -31,6 +31,7 @@ struct mg_handler* mg_handler_connect_server();
 struct mg_handler* mg_handler_disconnect_server();
 
 struct mg_handler* mg_handler_get_clientlist();
+struct mg_handler* mg_handler_get_clientavatar();
 
 struct mg_handler* mg_handler_get_self();
 struct mg_handler* mg_handler_mute_toggle_self();

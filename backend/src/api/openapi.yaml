@@ -205,6 +205,23 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TS3ClientWithChannel"
+  /clients/{id}/avatar:
+    get:
+      tags: [clients]
+      description: |
+        Returns the avatar of a TeamSpeak 3 client.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        description: The id of the TeamSpeak client.
+        schema:
+          type: integer
+      responses:
+        200:
+          description: ""
+          content:
+            application/octet-stream: {}
 
   /cursor:
     get:

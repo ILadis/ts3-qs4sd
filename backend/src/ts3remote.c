@@ -254,6 +254,23 @@ static void TS3Remote_resetClientList(struct TS3Remote *remote) {
   }
 }
 
+int TS3Remote_openClientAvatar(struct TS3Remote *remote, anyID clientId) {
+  struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
+  char filepath[2048];
+
+  int result = ts3->getAvatar(remote->handle, clientId, filepath, length(filepath));
+  if (result == 0) {
+    // avatar not yet downloaded
+    if(strlen(filepath) <= 0) {
+      return 0;
+    }
+
+    return open(filepath, O_RDONLY);
+  }
+
+  return -1;
+}
+
 void TS3Remote_muteInput(struct TS3Remote *remote, bool mute) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
 

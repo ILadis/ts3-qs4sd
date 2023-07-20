@@ -60,6 +60,23 @@ static inline bool mg_http_reqmatch(
   return mg_strcmp(msg->method, method) == 0 && mg_http_match_uri(msg, uri);
 }
 
+static inline int mg_http_reqmatchfmt(
+    struct mg_http_message *msg,
+    const struct mg_str method,
+    const char *uri, ...)
+{
+  if (mg_strcmp(msg->method, method) != 0) {
+    return 0;
+  }
+
+  va_list arguments;
+  va_start(arguments, uri);
+  int result = vsscanf(msg->uri.ptr, uri, arguments);
+  va_end(arguments);
+
+  return result;
+}
+
 static inline void mg_http_printf_json_chunk(
     struct mg_connection *conn,
     const char *fmt,
