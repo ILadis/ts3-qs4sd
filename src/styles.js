@@ -24,6 +24,10 @@ export default `
 .channel-count::before { content: '('; }
 .channel-count::after  { content: ')'; }
 
+.client-item-field + .client-item-field {
+  padding-top: 0 !important;
+}
+
 .client-item {
   display: block;
   line-height: 15px;

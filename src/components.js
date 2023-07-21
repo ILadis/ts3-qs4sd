@@ -1,5 +1,5 @@
 
-import { createElement as $ } from 'react';
+import { createElement as $, useState } from 'react';
 
 import {
   Field,
@@ -146,16 +146,24 @@ export function TS3ClientList(props) {
 
 export function TS3ClientItem({ client }) {
   return (
-    $(Field, { label: $(TS3ClientAvatar), childrenContainerWidth: 'max', bottomSeparator: 'none' },
+    $(Field, { label: $(TS3ClientAvatar, { client, key: client.id }), className: 'client-item-field', childrenContainerWidth: 'max', bottomSeparator: 'none' },
       $('span', { className: 'client-item nickname' }, client.nickname),
       $('span', { className: 'client-item status' }, 'Online'),
     )
   );
 }
 
-export function TS3ClientAvatar() {
-  const url = 'https://avatars.cloudflare.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg';
-  return $('figure', { className: 'client-avatar' }, $('img', { src: url, width: '100%', height: '100%' }));
+export function TS3ClientAvatar({ client }) {
+  const fallback = 'https://avatars.cloudflare.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg';
+  const [url, setUrl] = useState(client.avatar);
+
+  const onError = url == fallback ? null : () => setUrl(fallback);
+
+  return (
+    $('figure', { className: 'client-avatar' },
+      $('img', { src: url, width: '100%', height: '100%', onError })
+    )
+  );
 }
 
 export function TS3IconButton({ icon, onClick }) {

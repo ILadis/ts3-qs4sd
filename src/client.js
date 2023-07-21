@@ -117,6 +117,7 @@ Client.prototype.getSelf = async function() {
   return {
     'id': Number(client['client_id']),
     'nickname': String(client['client_nickname']),
+    'avatar': this.endpoint + '/clients/' + client['client_id'] + '/avatar',
     'muted': {
       'input': Boolean(client['input_muted']),
       'output': Boolean(client['output_muted']),
@@ -194,6 +195,7 @@ Client.prototype.listChannels = async function() {
     channel.clients.push({
       'id': Number(client['client_id']),
       'nickname': String(client['client_nickname']),
+      'avatar': this.endpoint + '/clients/' + client['client_id'] + '/avatar',
       'muted': {
         'input': Boolean(client['input_muted']),
         'output': Boolean(client['output_muted']),
