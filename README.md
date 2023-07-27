@@ -7,13 +7,13 @@ A TeamSpeak 3 client and [DeckyLoader](https://github.com/SteamDeckHomebrew/Plug
 
 - Connect to bookmarked servers.
 - See connected clients and join their channels.
+- See client avatars and their current status.
 - Mute/Unmute microphone and speakers.
 - Control audio volumes of running applications.
 - Disconnect from current server.
 - Push-to-Talk via shoulder buttons (bound to L5).
 
 **Missing/Planned features**:  
-- Display client avatars and their current status.
 - Make Push-to-Talk button configurable.
 - Start/stop TeamSpeak client which is running in the background.
 
