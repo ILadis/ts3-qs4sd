@@ -39,6 +39,7 @@ Follow these steps in order to install and setup the plugin on your Steam Deck:
 1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs: `flatpak override --user com.teamspeak.TeamSpeak --device=all`
 1. Switch back to gaming mode and install TS3 QuickAccess from the DeckyLoader store.
 
-To install the plugin manually follow steps 2-3 from above and then:
-1. Download a [pre build version](https://github.com/ILadis/ts3-qs4sd/releases) of the DeckyLoader plugin.
-1. Extract the ZIP archive on your Steam Deck to the `plugins/` directory of your DeckyLoader installation.
+To install the plugin manually follow steps 1-4 from above and then:
+1. Download a [pre build version](https://github.com/ILadis/ts3-qs4sd/releases) of the DeckyLoader plugin and copy it to your Steam Deck.
+1. Go to DeckyLoader settings and enable developer mode.
+1. Open the DeckyLoader developer menu and select "Install Plugin from ZIP File".
