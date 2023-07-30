@@ -41,7 +41,7 @@ run:
 	teamspeak3
 
 clean:
-	@rm -rf out/
+	@rm -f out/*
 
 %.so:
 	@$(CC) $(CFLAGS) $(CFILES) -o $@ -shared
