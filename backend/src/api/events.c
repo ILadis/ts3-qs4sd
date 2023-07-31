@@ -7,11 +7,11 @@
 static const char *tag = "EVENTS";
 
 static inline void mg_handler_events_set_tag(struct mg_connection *conn) {
-  strcpy(conn->label, tag);
+  strcpy(conn->data, tag);
 }
 
 static inline bool mg_handler_events_is_tagged(struct mg_connection *conn) {
-  return strcmp(conn->label, tag) == 0;
+  return strcmp(conn->data, tag) == 0;
 }
 
 static void mg_handler_events_fn(
