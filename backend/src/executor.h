@@ -5,19 +5,15 @@
 #include <pthread.h>
 #include <unistd.h>
 
-typedef void (*Task)();
+typedef bool (*Task)();
 
 struct Executor {
-  Task tasks[10];
+  Task task;
   pthread_t thread;
   volatile bool running;
 };
 
-struct Executor* Executor_getInstance();
-
-void Executor_addTask(
-    struct Executor *executor,
-    Task task);
+#define Executor_forTask(task) ((struct Executor) { task })
 
 void Executor_start(struct Executor *executor);
 void Executor_stop(struct Executor *executor);

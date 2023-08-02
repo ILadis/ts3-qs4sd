@@ -4,24 +4,38 @@
 
 #include "log.h"
 
-void PAudio_task() {
+bool PAudio_task() {
   static bool once = true;
   struct PAudio *paudio = PAudio_getInstance();
+
   if (once && !PAudio_connect(paudio)) {
     Logger_errorLog("Could not connect to Pulse Audio server");
-    once = false;
+    return false;
   }
 
-  PAudio_runLoop(paudio);
+  once = false;
+  if (!PAudio_runLoop(paudio)) {
+    Logger_infoLog("Running Pulse Audio main loop failed, terminating task");
+    return false;
+  }
+
+  return true;
 }
 
-void SDInput_task() {
+bool SDInput_task() {
   static bool once = true;
   struct SDInput *input = SDInput_getInstance();
+
   if (once && !SDInput_tryOpenDevice(input)) {
     Logger_errorLog("Could not open Steam Deck input device");
-    once = false;
+    return false;
   }
 
-  SDInput_pollState(input);
+  once = false;
+  if (!SDInput_pollState(input)) {
+    Logger_infoLog("Polling Steam Deck input device failed, terminating task");
+    return false;
+  }
+
+  return true;
 }

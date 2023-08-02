@@ -1,43 +1,15 @@
 
 #include "executor.h"
 
-struct Executor* Executor_getInstance() {
-  static struct Executor executor = {0};
-  return &executor;
-}
-
-void Executor_addTask(
-    struct Executor *executor,
-    Task task)
-{
-  Task *tasks = executor->tasks;
-
-  if (!executor->running) {
-    int index = 0;
-    const int limit = sizeof(executor->tasks) / sizeof(*tasks);
-
-    while (tasks[index] != NULL && index < limit) {
-      index++;
-    }
-
-    tasks[index] = task;
-  }
-}
-
 static void* Executor_runner(void *context) {
   struct Executor *executor = context;
-  Task *tasks = executor->tasks;
+  Task task = executor->task;
 
   while (executor->running) {
-    int index = 0;
-    const int limit = sizeof(executor->tasks) / sizeof(*tasks);
-
-    while (tasks[index] != NULL && index < limit) {
-      tasks[index++]();
+    if (task() == false) {
+      executor->running = false;
+      break;
     }
-
-    const int timeout = 10;
-    usleep(timeout * 1000);
   }
 
   return NULL;

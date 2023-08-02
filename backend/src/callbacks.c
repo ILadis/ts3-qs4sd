@@ -14,6 +14,12 @@
 static struct TS3Functions ts3funcs = {0};
 static struct mg_server server = {0};
 
+extern bool PAudio_task();
+static struct Executor paudio = Executor_forTask(PAudio_task);
+
+extern bool SDInput_task();
+static struct Executor input = Executor_forTask(SDInput_task);
+
 struct TS3Functions* ts3plugin_getFunctionPointers() {
   return &ts3funcs;
 }
@@ -51,15 +57,8 @@ int ts3plugin_init() {
     return 1;
   }
 
-  struct Executor *executor = Executor_getInstance();
-
-  extern void PAudio_task();
-  Executor_addTask(executor, PAudio_task);
-
-  extern void SDInput_task();
-  Executor_addTask(executor, SDInput_task);
-
-  Executor_start(executor);
+  Executor_start(&paudio);
+  Executor_start(&input);
 
   return 0;
 }
@@ -70,8 +69,8 @@ void ts3plugin_shutdown() {
   struct TS3Remote *remote = TS3Remote_getInstance(0);
   TS3Remote_resetConnection(remote);
 
-  struct Executor *executor = Executor_getInstance();
-  Executor_stop(executor);
+  Executor_stop(&paudio);
+  Executor_stop(&input);
 
   struct PAudio *paudio = PAudio_getInstance();
   PAudio_shutdown(paudio);

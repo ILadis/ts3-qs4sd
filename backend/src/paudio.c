@@ -80,7 +80,7 @@ bool PAudio_runLoop(struct PAudio *paudio) {
 
   PAudio_guardContextIsset(paudio, false);
 
-  const int timeout = 10;
+  const int timeout = 500;
   int result = pa_mainloop_prepare(mainloop, timeout * 1000);
 
   if (result < 0) {
