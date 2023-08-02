@@ -44,11 +44,6 @@ void mg_server_stop(struct mg_server *server);
 
 struct mg_handler* mg_handler_not_found();
 
-#define HTTP_RESPONSE(status, media) "HTTP/1.1 " status "\r\nTransfer-Encoding: chunked\r\nContent-Type: " media "\r\n"
-#define HTTP_REQUEST(host, method, path) method " " path " HTTP/1.1\r\nHost: " host "\r\n"
-#define HTTP_HEADER(name, value) name ": " value "\r\n"
-#define HTTP_NEWLINE "\r\n"
-
 #define HTTP_METHOD_GET  mg_str_n("GET", 3)
 #define HTTP_METHOD_POST mg_str_n("POST", 4)
 

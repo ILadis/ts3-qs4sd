@@ -2,7 +2,7 @@
 #include "settings.h"
 
 #include "server.h"
-#include "injector.h"
+#include "devtools.h"
 #include "log.h"
 
 static void mg_server_handler(struct mg_connection *conn, int event, void *data,void *context);
@@ -120,11 +120,8 @@ static void* mg_server_thread(void *context) {
 
   Logger_infoLog("Server (API) thread started");
 
-  struct Injector *injector = Injector_createNew(manager);
-  Injector_setState(injector, STATE_DISABLED);
-
-  char injectUrl[60];
-  snprintf(injectUrl, sizeof(injectUrl), "http://localhost:%hu/static/main.js", server->port);
+  struct DevTools *dev = DevTools_createNew(manager);
+  DevTools_inspectTab(dev, "http://" SETTINGS_ADDR(STEAM_DECK), "SharedJSContext");
 
   while (server->running) {
     mg_mgr_poll(manager, 20);
@@ -134,8 +131,6 @@ static void* mg_server_thread(void *context) {
       mg_server_fire_event(server, event);
       event = mg_server_next_user_event(server);
     }
-
-    Injector_tryLoadExternalJS(injector, injectUrl);
   }
 
   Logger_infoLog("Server (API) thread stopped");
