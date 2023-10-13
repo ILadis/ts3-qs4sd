@@ -13,7 +13,7 @@
 #define CORS_ORIGIN "https://steamloopback.host"
 
 #define SERVER_HOST "localhost"
-#define SERVER_PORT 8000
+#define SERVER_PORT 52259
 
 #define STEAM_DECK_HOST "localhost"
 #define STEAM_DECK_PORT 8080

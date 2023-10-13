@@ -151,7 +151,7 @@ function App({ client }) {
 }
 
 export default definePlugin(serverAPI => {
-  const client = new Client('http://localhost:8000/api', serverAPI);
+  const client = new Client('http://localhost:52259/api', serverAPI);
 
   client.setAudioOutputVolume = debounce(client.setAudioOutputVolume.bind(client));
 
