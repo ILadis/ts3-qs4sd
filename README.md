@@ -15,9 +15,11 @@ A TeamSpeak 3 client and [DeckyLoader](https://github.com/SteamDeckHomebrew/Plug
 
 **Missing/Planned features**:  
 - Make Push-to-Talk button configurable.
-- Start/stop TeamSpeak client which is running in the background.
+- Option to stop TeamSpeak client when exiting the plugin.
 
 ## Building
+
+### Backend
 
 The following dependencies are required to build the TeamSpeak 3 client plugin:
 1. [mjson](https://github.com/cesanta/mjson): for JSON parsing
@@ -29,6 +31,21 @@ The following dependencies are required to build the TeamSpeak 3 client plugin:
 To download dependencies 1-4 run `make vendor` (this requires `wget`). All other dependencies need to be installed manually. Then run `make` to build the plugin.
 
 Change the working directory to `backend/` before issuing any `make` commands.
+
+### Frontend
+
+The following tools are required to build the DeckyLoader frontend:
+1. [Node.js](https://nodejs.org): JavaScript runtime required for building
+1. [pnpm](https://pnpm.io): package manager for JavaScript/Node.js
+
+After all required tools are installed run the following commands to build the frontend:
+
+```sh
+$ pnpm install
+$ pnpm run /^build/
+```
+
+This should create a `plugin.zip` file containing both the front- and backend part of the plugin.
 
 ## Installing
 
