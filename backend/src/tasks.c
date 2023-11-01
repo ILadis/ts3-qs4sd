@@ -13,7 +13,11 @@ bool PAudio_task() {
     return false;
   }
 
-  once = false;
+  if (once) {
+    Logger_debugLog("Connected to Pulse Audio server");
+    once = false;
+  }
+
   if (!PAudio_runLoop(paudio)) {
     Logger_infoLog("Running Pulse Audio main loop failed, terminating task");
     return false;
@@ -31,7 +35,11 @@ bool SDInput_task() {
     return false;
   }
 
-  once = false;
+  if (once) {
+    Logger_debugLog("Opened Steam Deck input device");
+    once = false;
+  }
+
   if (!SDInput_pollState(input)) {
     Logger_infoLog("Polling Steam Deck input device failed, terminating task");
     return false;
