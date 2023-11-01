@@ -43,6 +43,8 @@ class TeamSpeak:
 
     env = dict(os.environ)
     env['DISPLAY'] = ':0'
+    env['PULSE_SERVER'] = 'unix:/run/user/1000/pulse/native'
+    env['PULSE_CLIENTCONFIG'] = '/run/user/1000/pulse/config'
 
     try:
       subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak'], env=env)
