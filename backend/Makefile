@@ -28,8 +28,8 @@ vendor:
 	@curl https://github.com/graphitemaster/incbin/raw/main/incbin.h -Lso vnd/incbin.h
 	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.c -Lso vnd/mjson.c
 	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.h -Lso vnd/mjson.h
-	@curl https://github.com/cesanta/mongoose/raw/7.11/mongoose.c -Lso vnd/mongoose.c
-	@curl https://github.com/cesanta/mongoose/raw/7.11/mongoose.h -Lso vnd/mongoose.h
+	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.c -Lso vnd/mongoose.c
+	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.h -Lso vnd/mongoose.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/plugin_definitions.h -Lso vnd/plugin_definitions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/ts3_functions.h -Lso vnd/ts3_functions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamlog/logtypes.h -Lso vnd/teamspeak/teamlog/logtypes.h
