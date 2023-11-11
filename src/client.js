@@ -252,6 +252,47 @@ Client.prototype.joinCursor = async function() {
   }
 };
 
+Client.prototype.browseChannels = async function() {
+  let url = this.endpoint + '/browser';
+
+  let request = new Request(url, {
+    method: 'GET'
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error('failed to browse channels');
+  }
+
+  let browser = await response.json();
+  let channels = [];
+
+  for (let channel of browser['sub_channels']) {
+    channels.push({
+      'id': Number(channel['channel_id']),
+      'name': String(channel['channel_name']),
+    });
+  }
+
+  return channels;
+};
+
+Client.prototype.moveBrowser = async function(channel) {
+  let url = this.endpoint + '/browser/move';
+  let body = JSON.stringify({
+    'channel_id': Number(channel.id)
+  });
+
+  let request = new Request(url, {
+    method: 'POST', body
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error(`failed to move browser to channel ${channel.id}`);
+  }
+};
+
 Client.prototype.listenEvents = function*() {
   const url = this.endpoint + '/events';
   var source = connect(), resolve = () => { };

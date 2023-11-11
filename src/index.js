@@ -28,6 +28,11 @@ function App({ client }) {
     client.disconnect();
   }
 
+  async function browseChannels(channel) {
+    await client.moveBrowser(channel);
+    return await client.browseChannels();
+  }
+
   async function toggleMute(device) {
     const state = !self.muted[device];
     await client.muteClient(self.id, device, state);
@@ -142,6 +147,7 @@ function App({ client }) {
       connectTo,
       joinChannel,
       disconnect,
+      browseChannels,
       toggleMute,
       toggleOutputs,
       // events
@@ -151,7 +157,7 @@ function App({ client }) {
 }
 
 export default definePlugin(serverAPI => {
-  const client = new Client('http://localhost:52259/api', serverAPI);
+  const client = new Client('http://127.0.0.1:52259/api', serverAPI);
 
   client.setAudioOutputVolume = debounce(client.setAudioOutputVolume.bind(client));
 
