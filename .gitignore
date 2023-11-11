@@ -1,6 +1,8 @@
 .vscode/
 backend/vnd
 backend/out
+decky/data
+decky/logs
 decky/services
 dist/
 node_modules/

@@ -7,11 +7,13 @@ export PRIVILIGED_PATH="${SELF_DIR}"
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 
 export LIVE_RELOAD=1
+export CHOWN_PLUGIN_PATH=0
 export LOG_LEVEL='DEBUG'
-export DECKY_VERSION='v2.10.1'
+export DECKY_VERSION='v2.10.5'
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"
+  echo -n "${DECKY_VERSION}" > "${SELF_DIR}/services/.loader.version"
   wget "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/${DECKY_VERSION}/PluginLoader" \
     -qO "${SELF_DIR}/services/PluginLoader"
 fi
@@ -21,6 +23,7 @@ fi
 #
 # $ ssh -T -L 8080:127.0.0.1:8080 deck
 # $ ssh -T -R 1337:127.0.0.1:1337 deck
+# $ ssh -T -R 52259:127.0.0.1:52259 deck
 
 chmod +x "${SELF_DIR}/services/PluginLoader"
 exec "${SELF_DIR}/services/PluginLoader"
