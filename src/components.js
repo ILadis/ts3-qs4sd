@@ -2,16 +2,13 @@
 import { createElement as $, useEffect, useState } from 'react';
 
 import {
+  Tabs,
   Field,
   Focusable,
   DialogButton,
   SliderField,
   PanelSection,
   PanelSectionRow,
-  ModalRoot,
-  DialogHeader,
-  DialogBody,
-  showModal,
 } from 'decky-frontend-lib';
 
 import * as Icons from './icons';
@@ -21,7 +18,7 @@ export function TS3QuickAccessPanel(props) {
   const content = ({
     'setup':     TS3SetupHints,
     'bookmarks': TS3BookmarkList,
-    'dashboard': TS3Dashboard,
+    'dashboard': TS3Tabs,
   })[props.content];
 
   return (
@@ -62,18 +59,37 @@ export function TS3BookmarkList(props) {
   );
 }
 
-export function TS3ChannelBrowserDialog(props) {
+export function TS3Tabs(props) {
+  const { server } = props;
+  const [currentTab, setCurrentTab] = useState('dashboard');
+
+  const tabs = [
+    { title: server.name, content: $(TS3Dashboard, props), id: 'dashboard' },
+    { title: 'Channel Browser', content: $(TS3ChannelBrowser, props), id: 'browser' },
+    { title: 'Settings', content: $('div'), id: 'settings' },
+  ];
+
+  return (
+    $('div', { className: 'dashboard-tabs' },
+      $(Tabs, { tabs, activeTab: currentTab, onShowTab: (id) => setCurrentTab(id) })
+    )
+  );
+}
+
+export function TS3ChannelBrowser(props) {
   const {
     browseChannels,
     joinChannel,
-    closeModal,
   } = props;
 
+  // TODO move state handling to app component
   const [channels, setChannels] = useState([]);
   const [parent, setParent] = useState([]);
 
-  const channel = { id: 0 };
-  useEffect(() => viewChannels(channel), [])
+  if (parent.length == 0 && channels.length == 0) {
+    const channel = { id: 0 };
+    viewChannels(channel);
+  }
 
   async function viewChannels(channel) {
     const channels = await browseChannels(channel);
@@ -83,11 +99,9 @@ export function TS3ChannelBrowserDialog(props) {
     }
   }
 
-  async function parentChannel() {
+  function parentChannel() {
     const channel = (parent.shift(), parent.shift());
-    if (!channel) {
-      closeModal();
-    } else {
+    if (channel) {
       viewChannels(channel);
     }
   }
@@ -98,25 +112,21 @@ export function TS3ChannelBrowserDialog(props) {
   };
 
   return (
-    $(ModalRoot, { closeModal: () => parentChannel() },
-      $(DialogHeader, null, 'Channel Browser'),
-      $(DialogBody, null, channels.map(channel =>
-        $(PanelSectionRow, { key: channel.id },
-          $(Field, { label: channel.name, childrenLayout: 'inline', inlineWrap: 'keep-inline' },
-            $(Focusable, { style },
-              $(DialogButton, { onClick: () => viewChannels(channel), style: { 'min-width': 0 } }, 'View'),
-              $(DialogButton, { onClick: () => (joinChannel(channel), closeModal()), style: { 'min-width': 0 } }, 'Join')
-            )
+    $(PanelSection, null, channels.map(channel =>
+      $(PanelSectionRow, { key: channel.id },
+        $(Field, { label: channel.name, childrenLayout: 'inline', inlineWrap: 'keep-inline' },
+          $(Focusable, { style, onCancel: () => parentChannel() },
+            $(TS3IconButton, { onClick: () => viewChannels(channel), icon: $(TS3ExpandMore) }),
+//          $(DialogButton, { onClick: () => joinChannel(channel), style: { 'min-width': 0 } }, 'Join')
           )
         )
-      ))
-    )
+      )
+    ))
   );
 }
 
 export function TS3Dashboard(props) {
   const {
-    server,
     channels,
     outputs,
     toggleOutputs,
@@ -125,10 +135,8 @@ export function TS3Dashboard(props) {
   } = props;
 
   return (
-    $(PanelSection, { title: server.name },
+    $(PanelSection, null,
       $(PanelSectionRow, null, $(TS3DashboardActions, props)),
-
-      $(PanelSectionRow, null, $(TS3DashboardAction, { onClick: () => showModal($(TS3ChannelBrowserDialog, props)), label: 'View Channels' })),
       $(PanelSectionRow, null, $(TS3DashboardAction, { onClick: () => toggleOutputs(), label: 'Volume Settings' })),
 
       outputs.map(output => $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged }))),
@@ -259,6 +267,15 @@ export function TS3OutputMute({ state }) {
   return (
     $('svg', { viewBox: '0 0 48 48', width: '24px' },
       $('path', { fill: 'currentColor', 'd': paths[state] || '' })
+    )
+  );
+}
+
+export function TS3ExpandMore() {
+  const path = Icons.ExpandMore;
+  return (
+    $('svg', { viewBox: '200 -800 600 500', width: '20px' },
+      $('path', { fill: 'currentColor', 'd': path })
     )
   );
 }

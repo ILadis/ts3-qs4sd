@@ -1,5 +1,31 @@
 
 export default `
+.quickaccessmenu_TabGroupPanel_1QO7b {
+  height: auto !important;
+}
+
+.dashboard-tabs {
+  height: calc(100vh - 60px);
+}
+
+.dashboard-tabs .gamepadtabbedpage_TabRowSpacer_dCYln {
+  display: none !important;
+}
+
+.dashboard-tabs .gamepadtabbedpage_Tab_3eEbS {
+  display: none !important;
+}
+
+.dashboard-tabs .gamepadtabbedpage_Selected_3Gp1b {
+  background-color: transparent !important;
+  color: #dcdedf !important;
+  display: block !important;
+}
+
+.dashboard-tabs .gamepadtabbedpage_TabContentsScroll_1X4dt {
+  padding-bottom: 0 !important;
+}
+
 .channel-headline {
   display: inline-block;
   max-width: 100%;
