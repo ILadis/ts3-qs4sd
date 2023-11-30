@@ -23,10 +23,12 @@ static void mg_handler_get_browser_fn(
       }
 
       mg_http_api_response(conn, "200 OK", "application/json");
-      mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CHANNEL ",\"sub_channels\":[", channel->id, channel->name);
+      mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CHANNEL ",\"sub_channels\":[",
+        channel->id, channel->name, channel->order, channel->maxClients, channel->hasPassword);
 
       for (int i = 0; i < browser->numChilds; i++) {
-        mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CHANNEL "}", childs[i].id, childs[i].name);
+        mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CHANNEL "}",
+          childs[i].id, childs[i].name, childs[i].order, childs[i].maxClients, childs[i].hasPassword);
       }
 
       mg_http_printf_chunk(conn, "]}");

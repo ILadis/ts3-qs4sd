@@ -26,6 +26,11 @@ export default `
   padding-bottom: 0 !important;
 }
 
+.dashboard-tabs .gamepaddialog_FieldIcon_1sC68 {
+  margin-left: auto;
+  order: 1;
+}
+
 .channel-headline {
   display: inline-block;
   max-width: 100%;

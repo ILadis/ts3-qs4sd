@@ -188,6 +188,8 @@ Client.prototype.listChannels = async function() {
       channels.push(channel = {
         'id': Number(client['channel_id']),
         'name': String(client['channel_name']),
+        'maxClients': Number(client['channel_max_clients']),
+        'hasPassword': Boolean(client['channel_has_password']),
         'clients': Array(),
       });
     }
@@ -271,10 +273,26 @@ Client.prototype.browseChannels = async function() {
     channels.push({
       'id': Number(channel['channel_id']),
       'name': String(channel['channel_name']),
+      'order': Number(channel['channel_order']),
+      'maxClients': Number(channel['channel_max_clients']),
+      'hasPassword': Boolean(channel['channel_has_password']),
     });
   }
 
-  return channels;
+  let sorted = [];
+  let nextId = 0;
+
+  while (true) {
+    let channel = channels.find(channel => channel.order === nextId);
+
+    if (!channel) break;
+    else delete channel['order'];
+
+    sorted.push(channel);
+    nextId = channel.id;
+  }
+
+  return sorted;
 };
 
 Client.prototype.moveBrowser = async function(channel) {

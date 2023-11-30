@@ -106,20 +106,11 @@ export function TS3ChannelBrowser(props) {
     }
   }
 
-  const style = {
-    'display': 'flex',
-    'gap': '4px'
-  };
-
   return (
     $(PanelSection, null, channels.map(channel =>
-      $(PanelSectionRow, { key: channel.id },
-        $(Field, { label: channel.name, childrenLayout: 'inline', inlineWrap: 'keep-inline' },
-          $(Focusable, { style, onCancel: () => parentChannel() },
-            $(TS3IconButton, { onClick: () => viewChannels(channel), icon: $(TS3ExpandMore) }),
-//          $(DialogButton, { onClick: () => joinChannel(channel), style: { 'min-width': 0 } }, 'Join')
-          )
-        )
+      $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
+        ? $(Field, { label: channel.name, focusable: true, highlightOnFocus: true, onOKButton: () => viewChannels(channel), onCancelButton: () => parentChannel(), icon: $(TS3ExpandMore) }, null)
+        : $(Field, { label: channel.name, focusable: true, highlightOnFocus: true, onOKButton: () => joinChannel(channel), onCancelButton: () => parentChannel() }, null)
       )
     ))
   );
@@ -274,7 +265,7 @@ export function TS3OutputMute({ state }) {
 export function TS3ExpandMore() {
   const path = Icons.ExpandMore;
   return (
-    $('svg', { viewBox: '200 -800 600 500', width: '20px' },
+    $('svg', { viewBox: '0 0 36 36', width: '16px' },
       $('path', { fill: 'currentColor', 'd': path })
     )
   );

@@ -73,6 +73,9 @@ static void TS3Client_update(struct TS3Client *client, anyID id, struct TS3Remot
 
 static void TS3Channel_reset(struct TS3Channel *channel) {
   channel->id = 0;
+  channel->order = 0;
+  channel->hasPassword = false;
+  channel->maxClients = 0;
   TS3Remote_freeMemory((void **) &channel->name);
 }
 
@@ -88,6 +91,9 @@ static void TS3Channel_update(struct TS3Channel *channel, uint64 id, struct TS3R
     ts3->getServerVariableAsString(remote->handle, VIRTUALSERVER_NAME, &channel->name);
   } else {
     ts3->getChannelVariableAsString(remote->handle, channel->id, CHANNEL_NAME, &channel->name);
+    ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_ORDER, &channel->order);
+    ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_FLAG_PASSWORD, (int *) &channel->hasPassword);
+    ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_MAXCLIENTS, &channel->maxClients);
   }
 }
 

@@ -24,7 +24,8 @@ static void mg_handler_get_clientlist_fn(
         struct TS3Channel *channel = &list->items[i].channel;
 
         mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CLIENT "," HTTP_JSON_CHANNEL "}",
-          client->id, client->nickname, client->inputMuted, client->outputMuted, channel->id, channel->name);
+          client->id, client->nickname, client->inputMuted, client->outputMuted,
+          channel->id, channel->name, channel->order, channel->maxClients, channel->hasPassword);
       }
 
       mg_http_printf_chunk(conn, "]");

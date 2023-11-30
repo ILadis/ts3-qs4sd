@@ -17,6 +17,9 @@
 struct TS3Channel {
   uint64 id;
   char *name;
+  int order;
+  bool hasPassword;
+  int maxClients;
 };
 
 struct TS3Bookmark {
