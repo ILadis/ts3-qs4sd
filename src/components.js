@@ -72,7 +72,6 @@ export function TS3Tabs(props) {
   const tabs = [
     { title: server.name, content: $(TS3Dashboard, props), id: 'dashboard' },
     { title: 'Channel Browser', content: $(TS3ChannelBrowser, props), id: 'browser' },
-    { title: 'Settings', content: $('div'), id: 'settings' },
   ];
 
   return (
