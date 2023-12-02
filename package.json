@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rm -rf ./dist && rollup -c",
     "build:zip": "rm -rf plugin.zip && cd decky/plugins && zip -r ../../plugin.zip ts3-qs4sd",
+    "plugin:reload": "./plugin.reload.js",
     "docker:build": "docker build -f ./backend/Dockerfile -t ts3-qs4sd .",
     "docker:run": "rm -rf ./backend/out && docker run -i -u 1000:1000 -v ./backend:/backend ts3-qs4sd",
     "clean": "rm -rf ./dist ./backend/out ./backend/vnd"
