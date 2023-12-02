@@ -60,7 +60,10 @@ static void mg_server_handler(
 
   if (event == MG_EV_HTTP_MSG) {
     struct mg_http_message *msg = (struct mg_http_message *) data;
-    Logger_debugLog("Request to %.*s %.*s", msg->method.len, msg->method.ptr, msg->uri.len, msg->uri.ptr);
+    Logger_debugLog("Request to %.*s %.*s %.*s",
+      msg->method.len, msg->method.ptr,
+      msg->uri.len, msg->uri.ptr,
+      msg->body.len, msg->body.ptr);
   }
 
   while (handler != NULL) {

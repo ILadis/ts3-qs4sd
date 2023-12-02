@@ -358,7 +358,7 @@ void TS3Remote_updateCursor(struct TS3Remote *remote) {
   }
 }
 
-bool TS3Remote_joinCursor(struct TS3Remote *remote) {
+bool TS3Remote_joinCursor(struct TS3Remote *remote, const char *password) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
   struct TS3Client *client = &remote->client;
   struct TS3Cursor *cursor = &remote->cursor;
@@ -368,7 +368,7 @@ bool TS3Remote_joinCursor(struct TS3Remote *remote) {
 
   uint64 id = channel->id;
   if (id != 0) {
-    int result = ts3->requestClientMove(remote->handle, client->id, id, "", NULL);
+    int result = ts3->requestClientMove(remote->handle, client->id, id, password, NULL);
     return result == 0;
   }
 

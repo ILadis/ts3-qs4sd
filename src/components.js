@@ -1,14 +1,20 @@
 
-import { createElement as $, useEffect, useState } from 'react';
+import { createElement as $, useState } from 'react';
 
 import {
   Tabs,
   Field,
   Focusable,
-  DialogButton,
+  TextField,
   SliderField,
   PanelSection,
   PanelSectionRow,
+  ModalRoot,
+  DialogBody,
+  DialogButton,
+  DialogHeader,
+  DialogFooter,
+  showModal,
 } from 'decky-frontend-lib';
 
 import * as Icons from './icons';
@@ -78,43 +84,63 @@ export function TS3Tabs(props) {
 
 export function TS3ChannelBrowser(props) {
   const {
+    browser,
     browseChannels,
+    browseParentChannels,
     joinChannel,
   } = props;
 
-  // TODO move state handling to app component
-  const [channels, setChannels] = useState([]);
-  const [parent, setParent] = useState([]);
-
-  if (parent.length == 0 && channels.length == 0) {
-    const channel = { id: 0 };
-    viewChannels(channel);
-  }
-
-  async function viewChannels(channel) {
-    const channels = await browseChannels(channel);
-    if (channels.length > 0) {
-      setParent([channel, ...parent]);
-      setChannels(channels);
-    }
-  }
-
-  function parentChannel() {
-    const channel = (parent.shift(), parent.shift());
-    if (channel) {
-      viewChannels(channel);
-    }
+  function TS3ChannelField({ channel, action, icon }) {
+    return $(Field, {
+      icon, label: channel.name,
+      focusable: true,
+      highlightOnFocus: true,
+      onOKButton: () => action(channel),
+      onCancelButton: () => browseParentChannels(),
+    });
   }
 
   return (
-    $(PanelSection, null, channels.map(channel =>
+    $(PanelSection, null, browser.map(channel =>
       $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
-        ? $(Field, { label: channel.name, focusable: true, highlightOnFocus: true, onOKButton: () => viewChannels(channel), onCancelButton: () => parentChannel(), icon: $(TS3ExpandMore) }, null)
-        : $(Field, { label: channel.name, focusable: true, highlightOnFocus: true, onOKButton: () => joinChannel(channel), onCancelButton: () => parentChannel() }, null)
+        ? $(TS3ChannelField, { channel, action: browseChannels, icon: $(TS3ExpandMore) })
+        : $(TS3ChannelField, { channel, action: joinChannel })
       )
     ))
   );
 }
+
+export function TS3ChannelPasswordPrompt(props) {
+  const {
+    resolve,
+    reject,
+    closeModal,
+  } = props;
+
+  let password = '';
+
+  const style = {
+    'display': 'flex',
+    'gap': '28px',
+  };
+
+  return (
+    $(ModalRoot, { closeModal: () => reject() },
+      $(DialogHeader, null, 'Enter Password'),
+      $(DialogBody, null,
+        $(TextField, { bIsPassword: true, onChange: (input) => password = input.target.value })
+      ),
+      $(DialogFooter, { style },
+        $(DialogButton, { onClick: () => (resolve(password), closeModal()) }, 'OK'),
+        $(DialogButton, { onClick: () => (reject(), closeModal()) }, 'Cancel'),
+      )
+    )
+  );
+}
+
+TS3ChannelPasswordPrompt.show = function() {
+  return new Promise((resolve, reject) => showModal($(TS3ChannelPasswordPrompt, { resolve, reject })));
+};
 
 export function TS3Dashboard(props) {
   const {
@@ -161,7 +187,7 @@ export function TS3DashboardActions(props) {
 
   const style = {
     'display': 'flex',
-    'gap': '4px'
+    'gap': '4px',
   };
 
   return (

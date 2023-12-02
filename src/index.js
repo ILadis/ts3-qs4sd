@@ -3,7 +3,7 @@ import { createElement as $, useState, useEffect } from 'react';
 import { definePlugin } from 'decky-frontend-lib';
 
 import { Client } from './client';
-import { TS3QuickAccessPanel, TS3LogoIcon } from './components';
+import { TS3QuickAccessPanel, TS3ChannelPasswordPrompt, TS3LogoIcon } from './components';
 import { retry, dispatch, debounce } from './utils.js'
 
 
@@ -12,6 +12,8 @@ function App({ client }) {
   const [bookmarks, setBookmarks] = useState([]);
   const [server, setServer] = useState(null);
   const [channels, setChannels] = useState([]);
+  const [browser, setBrowser] = useState([]);
+  const [parent, setParent] = useState([]);
   const [self, setSelf] = useState(null);
   const [outputs, setOutputs] = useState([]);
 
@@ -20,17 +22,32 @@ function App({ client }) {
   }
 
   async function joinChannel(channel) {
+    if (channel.hasPassword) {
+      var password = await TS3ChannelPasswordPrompt.show();
+    }
+
     await client.moveCursor(channel);
-    await client.joinCursor();
+    await client.joinCursor(password);
   }
 
   function disconnect() {
     client.disconnect();
   }
 
-  async function browseChannels(channel) {
+  async function browseChannels(channel = { id: 0 }) {
     await client.moveBrowser(channel);
-    return await client.browseChannels();
+    const channels = await client.browseChannels();
+    if (channels.length > 0) {
+      setParent([channel, ...parent]);
+      setBrowser(channels);
+    }
+  }
+
+  function browseParentChannels() {
+    const [_, channel] = parent.splice(0, 2);
+    if (channel) {
+      browseChannels(channel);
+    }
   }
 
   async function toggleMute(device) {
@@ -129,6 +146,7 @@ function App({ client }) {
     const channels = await client.listChannels();
     setChannels(channels);
 
+    browseChannels();
     setContent('dashboard');
   }
 
@@ -141,6 +159,7 @@ function App({ client }) {
       bookmarks,
       server,
       channels,
+      browser,
       self,
       outputs,
       // actions
@@ -148,6 +167,7 @@ function App({ client }) {
       joinChannel,
       disconnect,
       browseChannels,
+      browseParentChannels,
       toggleMute,
       toggleOutputs,
       // events

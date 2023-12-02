@@ -92,7 +92,7 @@ void TS3Remote_shouldTalk(struct TS3Remote *remote, bool talk);
 void TS3Remote_setCursorToSelf(struct TS3Remote *remote);
 void TS3Remote_setCursorToChannel(struct TS3Remote *remote, uint64 channelId);
 void TS3Remote_updateCursor(struct TS3Remote *remote);
-bool TS3Remote_joinCursor(struct TS3Remote *remote);
+bool TS3Remote_joinCursor(struct TS3Remote *remote, const char *password);
 
 void TS3Remote_setBrowserToSelf(struct TS3Remote *remote);
 void TS3Remote_setBrowserToChannel(struct TS3Remote *remote, uint64 channelId);

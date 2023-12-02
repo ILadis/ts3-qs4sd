@@ -78,8 +78,14 @@ static void mg_handler_join_cursor_fn(
     struct mg_http_message *msg = (struct mg_http_message *) data;
 
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/cursor/join")) {
+      char password[256];
+
+      if (!mg_http_get_json_string(msg, "$.password", password, sizeof(password))) {
+        return mg_http_api_response(conn, "400 Bad Request", NULL);
+      }
+
       struct TS3Remote *remote = TS3Remote_getInstance(0);
-      bool result = TS3Remote_joinCursor(remote);
+      bool result = TS3Remote_joinCursor(remote, password);
 
       return mg_http_api_response(conn, result ? "200 OK" : "500 Internal Server Error", NULL);
     }

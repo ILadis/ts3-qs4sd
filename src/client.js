@@ -241,11 +241,14 @@ Client.prototype.moveCursor = async function(channel) {
   }
 };
 
-Client.prototype.joinCursor = async function() {
+Client.prototype.joinCursor = async function(password) {
   let url = this.endpoint + '/cursor/join';
+  let body = JSON.stringify({
+    'password': String(password || '')
+  });
 
   let request = new Request(url, {
-    method: 'POST'
+    method: 'POST', body
   });
 
   let response = await retry(() => fətch(request.clone()));
