@@ -8,6 +8,10 @@ export default `
   height: calc(100vh - 60px);
 }
 
+.dashboard-tabs .gamepadtabbedpage_TabHeaderRowWrapper_2Jobs {
+  position: sticky !important;
+}
+
 .dashboard-tabs .gamepadtabbedpage_TabRowSpacer_dCYln {
   display: none !important;
 }
@@ -18,8 +22,17 @@ export default `
 
 .dashboard-tabs .gamepadtabbedpage_Selected_3Gp1b {
   background-color: transparent !important;
+  box-shadow: none !important;
   color: #dcdedf !important;
   display: block !important;
+}
+
+.dashboard-tabs .gamepadtabbedpage_Glyphs_N-f57.gamepadtabbedpage_Show_1ZEnd {
+  opacity: 1 !important;
+}
+
+.dashboard-tabs .gamepadtabbedpage_Glyphs_N-f57 {
+  opacity: 0.15 !important;
 }
 
 .dashboard-tabs .gamepadtabbedpage_TabContentsScroll_1X4dt {

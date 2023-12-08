@@ -89,23 +89,33 @@ export function TS3ChannelBrowser(props) {
     joinChannel,
   } = props;
 
-  function TS3ChannelField({ channel, action, icon }) {
-    return $(Field, {
-      icon, label: channel.name,
-      focusable: true,
-      highlightOnFocus: true,
-      onOKButton: () => action(channel),
-      onCancelButton: () => browseParentChannels(),
-    });
-  }
-
   return (
-    $(PanelSection, null, browser.map(channel =>
+    $(PanelSection, null, browser.map((channel, index) =>
       $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
-        ? $(TS3ChannelField, { channel, action: browseChannels, icon: $(TS3ExpandMore) })
-        : $(TS3ChannelField, { channel, action: joinChannel })
+        ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), onCancel: () => browseParentChannels(), icon: $(TS3ExpandMore) })
+        : $(TS3ChannelField, { index, channel, onSubmit: () => joinChannel(channel), onCancel: () => browseParentChannels() })
       )
     ))
+  );
+}
+
+function TS3ChannelField(props) {
+  const {
+    icon,
+    index,
+    channel,
+    onSubmit,
+    onCancel,
+  } = props;
+
+  return (
+    $(Field, {
+      icon, label: channel.name,
+      focusable: true, highlightOnFocus: true,
+      autoFocus: index === 0,
+      onOKButton: onSubmit,
+      onCancelButton: onCancel,
+    })
   );
 }
 
