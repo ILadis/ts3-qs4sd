@@ -3,13 +3,12 @@
 export SELF_SRC="$(realpath ${BASH_SOURCE})"
 export SELF_DIR="$(dirname "${SELF_SRC}")"
 
-export PRIVILIGED_PATH="${SELF_DIR}"
-export PLUGIN_PATH="${SELF_DIR}/plugins"
-
 export LIVE_RELOAD=1
 export CHOWN_PLUGIN_PATH=0
+export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LOG_LEVEL='DEBUG'
 export DECKY_VERSION='v2.10.5'
+export DECKY_DEVELOP=1
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"

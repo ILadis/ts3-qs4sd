@@ -10,6 +10,14 @@ class Plugin:
   async def _main(plugin):
     plugin.teamspeak = TeamSpeak()
 
+    if plugin._is_developer_mode():
+      decky_plugin.logger.warn('Running in developer mode, all actions are stubbed')
+      plugin.teamspeak.make_stub()
+
+  def _is_developer_mode():
+    flag = os.getenv('DECKY_DEVELOP', default='0')
+    return flag == '1'
+
   async def start(plugin):
     decky_plugin.logger.debug('Attempt to starting TeamSpeak 3')
 
@@ -41,10 +49,12 @@ class TeamSpeak:
     if self.is_running():
       return
 
+    uid = os.getuid() 
+
     env = dict(os.environ)
     env['DISPLAY'] = ':0'
-    env['PULSE_SERVER'] = 'unix:/run/user/1000/pulse/native'
-    env['PULSE_CLIENTCONFIG'] = '/run/user/1000/pulse/config'
+    env['PULSE_SERVER'] = f'unix:/run/user/{uid}/pulse/native'
+    env['PULSE_CLIENTCONFIG'] = f'/run/user/{uid}/pulse/config'
 
     try:
       subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak'], env=env)
@@ -100,3 +110,12 @@ class TeamSpeak:
       return True
     except:
       return False
+
+  def make_stub(self):
+    stub = lambda *params: True
+
+    self.start = stub
+    self.stop = stub
+    self.is_installed = stub
+    self.is_running = stub
+    self.install_plugin = stub
