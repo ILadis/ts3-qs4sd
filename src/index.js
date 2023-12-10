@@ -43,9 +43,13 @@ function App({ client }) {
     }
   }
 
+  function browseOnRoot() {
+    return parent.length <= 1;
+  }
+
   function browseParentChannels() {
-    const [_, channel] = parent.splice(0, 2);
-    if (channel) {
+    if (!browseOnRoot()) {
+      const [_, channel] = parent.splice(0, 2);
       browseChannels(channel);
     }
   }
@@ -167,6 +171,7 @@ function App({ client }) {
       joinChannel,
       disconnect,
       browseChannels,
+      browseOnRoot,
       browseParentChannels,
       toggleMute,
       toggleOutputs,

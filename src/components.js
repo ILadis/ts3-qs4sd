@@ -85,15 +85,20 @@ export function TS3ChannelBrowser(props) {
   const {
     browser,
     browseChannels,
+    browseOnRoot,
     browseParentChannels,
     joinChannel,
   } = props;
 
+  if (!browseOnRoot()) {
+    var onCancel = () => browseParentChannels();
+  }
+
   return (
     $(PanelSection, null, browser.map((channel, index) =>
       $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
-        ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), onCancel: () => browseParentChannels(), icon: $(TS3ExpandMore) })
-        : $(TS3ChannelField, { index, channel, onSubmit: () => joinChannel(channel), onCancel: () => browseParentChannels() })
+        ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), onCancel, icon: $(TS3ExpandMore) })
+        : $(TS3ChannelField, { index, channel, onSubmit: () => joinChannel(channel), onCancel })
       )
     ))
   );
