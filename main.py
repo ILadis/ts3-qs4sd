@@ -49,7 +49,7 @@ class TeamSpeak:
     if self.is_running():
       return
 
-    uid = os.getuid() 
+    uid = os.getuid()
 
     env = dict(os.environ)
     env['DISPLAY'] = ':0'
