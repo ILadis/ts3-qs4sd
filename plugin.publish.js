@@ -28,7 +28,7 @@ var releaseId = releases.find(release => release.name == releaseInfo.name)?.id;
 if (releaseId) {
   await client.request({
     method: 'DELETE',
-    body: `https://api.github.com/repos/ILadis/ts3-qs4sd/releases/${releaseId}`
+    path: `https://api.github.com/repos/ILadis/ts3-qs4sd/releases/${releaseId}`
   });
 }
 
