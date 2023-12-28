@@ -18,6 +18,7 @@ const releaseInfo = {
   'tag_name': 'latest',
   'target_commitish': 'master',
   'prerelease': true,
+  'draft': false,
 };
 
 const releases = await client.request({
