@@ -77,7 +77,7 @@ static inline void mg_http_printf_json_chunk(
     const char *fmt,
     const char *json, ...)
 {
-  static char buf[250];
+  static char buf[1024];
   struct mjson_fixedbuf fb = { buf, sizeof(buf), 0 };
 
   va_list arguments;

@@ -248,6 +248,8 @@ void TS3Remote_updateClientList(struct TS3Remote *remote) {
     TS3Client_update(&list->items[i].client, clientIds[i], remote);
     TS3Channel_update(&list->items[i].channel, channelId, remote);
   }
+
+  TS3Remote_freeMemory((void **) &clientIds);
 }
 
 static void TS3Remote_resetClientList(struct TS3Remote *remote) {
