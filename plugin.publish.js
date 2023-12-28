@@ -7,6 +7,7 @@ const token = process.env['GITHUB_TOKEN'];
 const client = new Github(token);
 
 const fileName = 'plugin.zip';
+const repoName = 'ILadis/ts3-qs4sd';
 const releaseInfo = {
   'name': 'Latest Devbuild',
   'body': ''
@@ -21,20 +22,25 @@ const releaseInfo = {
 
 const releases = await client.request({
   method: 'GET',
-  path: 'https://api.github.com/repos/ILadis/ts3-qs4sd/releases'
+  path: `https://api.github.com/repos/${repoName}/releases`
 });
 
 var releaseId = releases.find(release => release.name == releaseInfo.name)?.id;
 if (releaseId) {
   await client.request({
     method: 'DELETE',
-    path: `https://api.github.com/repos/ILadis/ts3-qs4sd/releases/${releaseId}`
+    path: `https://api.github.com/repos/${repoName}/releases/${releaseId}`
+  });
+
+  await client.request({
+    method: 'DELETE',
+    path: `https://api.github.com/repos/${repoName}/git/refs/tags/latest`
   });
 }
 
 const release = await client.request({
   method: 'POST',
-  path: `https://api.github.com/repos/ILadis/ts3-qs4sd/releases`,
+  path: `https://api.github.com/repos/${repoName}/releases`,
   headers: {
     'Content-Type': 'application/json'
   },
@@ -48,7 +54,7 @@ const stats = fs.statSync(fileName);
 
 await client.request({
   method: 'POST',
-  path: `https://uploads.github.com/repos/ILadis/ts3-qs4sd/releases/${releaseId}/assets?name=${fileName}`,
+  path: `https://uploads.github.com/repos/${repoName}/releases/${releaseId}/assets?name=${fileName}`,
   headers: {
     'Content-Type': 'application/octet-stream',
     'Content-Length': stats.size,
