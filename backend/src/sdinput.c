@@ -1,5 +1,6 @@
 
 #include "sdinput.h"
+#include "log.h"
 
 struct SDInput* SDInput_getInstance() {
   static struct SDInput input = {0};
@@ -9,7 +10,7 @@ struct SDInput* SDInput_getInstance() {
 static int SDInput_openDeviceIfMatches(
     const char *path,
     const struct hidraw_devinfo *device,
-    const struct hidraw_report_descriptor *descriptor)
+    unsigned int ifacenum)
 {
   int fd = open(path, O_RDWR|O_NONBLOCK);
   if (fd < 0) {
@@ -20,19 +21,19 @@ static int SDInput_openDeviceIfMatches(
   ioctl(fd, HIDIOCGRAWINFO, &dev);
 
   if (dev.vendor != device->vendor || dev.product != device->product) {
+    Logger_debugLog("Device %s does not match Steam Deck input vid/pid (is %hd/%hd)", path, dev.vendor, dev.product);
     goto error;
   }
 
-  struct hidraw_report_descriptor desc = {0};
-  ioctl(fd, HIDIOCGRDESCSIZE, &desc.size);
-  ioctl(fd, HIDIOCGRDESC, &desc);
+  char rawphys[256] = {0};
+  ioctl(fd, HIDIOCGRAWPHYS(256), rawphys);
 
-  if (desc.size != descriptor->size) {
-    goto error;
-  }
+  char ifacename[256] = {0};
+  snprintf(ifacename, sizeof(ifacename), "input%u", ifacenum);
 
-  int result = memcmp(desc.value, descriptor->value, desc.size);
-  if (result != 0) {
+  int offset = strlen(rawphys) - strlen(ifacename);
+  if (offset < 0  || strcmp(&rawphys[offset], ifacename) != 0) {
+    Logger_debugLog("Device %s does not match Steam Deck input physical location (is %s)", path, rawphys);
     goto error;
   }
 
@@ -49,16 +50,6 @@ bool SDInput_tryOpenDevice(struct SDInput *input) {
     .product = 0x1205,
   };
 
-  const struct hidraw_report_descriptor descriptor = {
-    .size = 25,
-    .value = {
-      0x06, 0xFF, 0xFF, 0x09, 0x01, 0xA1, 0x01, 0x15,
-      0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x40,
-      0x09, 0x01, 0x81, 0x02, 0x09, 0x01, 0xB1, 0x02,
-      0xC0
-    },
-  };
-
   // don't try to reopen device
   if (input->fd > 0) {
     return true;
@@ -68,7 +59,7 @@ bool SDInput_tryOpenDevice(struct SDInput *input) {
   for (int index = 0; index < 255; index++) {
     snprintf(path, sizeof(path), "/dev/hidraw%d", index);
 
-    int fd = SDInput_openDeviceIfMatches(path, &device, &descriptor);
+    int fd = SDInput_openDeviceIfMatches(path, &device, 2);
     if (fd > 0) {
       input->fd = fd;
       return true;
