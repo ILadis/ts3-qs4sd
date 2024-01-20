@@ -4,8 +4,8 @@ CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c) \
             $(wildcard src/injector/*.c) $(wildcard src/injector/states/*.c) \
             $(wildcard src/static/*.c)
 
-CFILES   += vnd/mongoose.c vnd/mjson.c
-CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
+CFILES   += vnd/mongoose.c vnd/mjson.c vnd/pb_common.c vnd/pb_encode.c vnd/pb_decode.c
+CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread -lsqlite3
 CFLAGS   += `pkg-config --cflags --libs libpulse`
 TARGET   := ts3-qs4sd.so
 
@@ -30,6 +30,13 @@ vendor:
 	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.h -Lso vnd/mjson.h
 	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.c -Lso vnd/mongoose.c
 	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.h -Lso vnd/mongoose.h
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb.h -Lso vnd/pb.h
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_common.c -Lso vnd/pb_common.c
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_common.h -Lso vnd/pb_common.h
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_encode.c -Lso vnd/pb_encode.c
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_encode.h -Lso vnd/pb_encode.h
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_decode.c -Lso vnd/pb_decode.c
+	@curl https://github.com/nanopb/nanopb/raw/nanopb-0.4.8/pb_decode.h -Lso vnd/pb_decode.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/plugin_definitions.h -Lso vnd/plugin_definitions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/ts3_functions.h -Lso vnd/ts3_functions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamlog/logtypes.h -Lso vnd/teamspeak/teamlog/logtypes.h
