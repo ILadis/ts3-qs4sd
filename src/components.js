@@ -57,8 +57,8 @@ export function TS3BookmarkList(props) {
   } = props;
 
   return (
-    $(PanelSection, { title: 'SERVERS' },
-      $(PanelSectionRow, null, bookmarks.map(bookmark =>
+    $(PanelSection, { title: 'SERVERS' }, bookmarks.map(bookmark =>
+      $(PanelSectionRow, null,
         $(Field, { onClick: () => connectTo(bookmark), label: bookmark.name })),
       )
     )
