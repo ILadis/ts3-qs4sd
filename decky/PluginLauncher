@@ -7,14 +7,14 @@ export LIVE_RELOAD=1
 export CHOWN_PLUGIN_PATH=0
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LOG_LEVEL='DEBUG'
-export DECKY_VERSION='v2.10.5'
+export DECKY_VERSION='v2.10.10'
 export DECKY_DEVELOP=1
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"
   echo -n "${DECKY_VERSION}" > "${SELF_DIR}/services/.loader.version"
-  wget "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/${DECKY_VERSION}/PluginLoader" \
-    -qO "${SELF_DIR}/services/PluginLoader"
+  curl "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/${DECKY_VERSION}/PluginLoader" \
+    -Lso "${SELF_DIR}/services/PluginLoader"
 fi
 
 # For testing on Steam Deck setup port forwarding between
