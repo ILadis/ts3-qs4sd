@@ -8,7 +8,11 @@ static void Logger_log(enum LogLevel severity, const char *format, va_list argum
   vsnprintf(message, sizeof(message), format, arguments);
 
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
-  ts3->logMessage(message, severity, "ts3-qs4sd", 0);
+  if (ts3->logMessage != NULL) {
+    ts3->logMessage(message, severity, "ts3-qs4sd", 0);
+  } else {
+    printf("%s\n", message);
+  }
 }
 
 #define Logger_logMessage(severity, message) do { \

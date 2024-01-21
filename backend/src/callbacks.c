@@ -33,9 +33,6 @@ struct mg_server* ts3plugin_getServer() {
 }
 
 int ts3plugin_init() {
-  extern void TS3Bookmarks_test();
-  TS3Bookmarks_test();
-
   mg_server_add_handler(&server, mg_handler_not_found());
   mg_server_add_handler(&server, mg_handler_get_server());
   mg_server_add_handler(&server, mg_handler_connect_server());

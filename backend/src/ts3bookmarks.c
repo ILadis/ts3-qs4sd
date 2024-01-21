@@ -1,28 +1,32 @@
 
-#include "log.h"
 #include "ts3bookmarks.h"
 #include "protobuf.h"
+#include "log.h"
 
-void TS3Bookmarks_test() {
-  struct TS3BookmarkEntry entry = {
-    .guid = "f861381c-dc98-021d-83b6-542b2f80344c",
-    .puid = "20831eae-bc63-5d30-215c-ff7e9a946e17",
-    .nickname = "Ladis",
-    .bookmarkName = "New Server",
-    .serverAddress = "ladi.dev",
-    .serverPort = 1337,
-    .timestamp = 1705793777,
-  };
-
-  unsigned char buffer[2048] = {0};
-  TS3Bookmarks_serialize(&entry, buffer, sizeof(buffer));
-
-  struct TS3BookmarkManager *manager = TS3BookmarkManager_getInstance();
-  if (!TS3BookmarkManager_openDatabase(manager, "/home/ladis/.ts3client/settings.db")) {
-    Logger_errorLog("Could not open database!");
+bool
+TS3BookmarkManager_addBookmark(
+    const char *dbpath,
+    const char *nickname,
+    const char *bookmarkName,
+    const char *serverAddress,
+    unsigned int serverPort)
+{
+  struct TS3BookmarkManager manager = {0};
+  if (!TS3BookmarkManager_openDatabase(&manager, dbpath)) {
+    Logger_errorLog("Could not open database: %s", dbpath);
+    return false;
   }
 
-  TS3BookmarkManager_lastBookmarkUUID(manager, NULL);
+  struct TS3BookmarkEntry entry = { .serverPort = serverPort };
+
+  snprintf(entry.nickname, sizeof(entry.nickname), "%s", nickname);
+  snprintf(entry.bookmarkName, sizeof(entry.bookmarkName), "%s", bookmarkName);
+  snprintf(entry.serverAddress, sizeof(entry.serverAddress), "%s", serverAddress);
+
+  bool result = TS3BookmarkManager_appendNewBookmark(&manager, &entry);
+  TS3BookmarkManager_closeDatabase(&manager);
+
+  return result;
 }
 
 struct TS3BookmarkManager* TS3BookmarkManager_getInstance() {
@@ -35,51 +39,221 @@ bool TS3BookmarkManager_openDatabase(
     const char *dbpath)
 {
   if (manager->db != NULL) {
-    return false;
+    return true;
   }
 
   int result = sqlite3_open(dbpath, &manager->db);
   if (result != SQLITE_OK) {
-    sqlite3_close(manager->db);
-    manager->db = NULL;
+    TS3BookmarkManager_closeDatabase(manager);
     return false;
   }
 
   return true;
 }
 
-bool TS3BookmarkManager_lastBookmarkUUID(
+void TS3BookmarkManager_closeDatabase(struct TS3BookmarkManager *manager) {
+  sqlite3_close(manager->db);
+  manager->db = NULL;
+}
+
+static bool TS3BookmarkManager_findBookmarkByUUIDs(
     struct TS3BookmarkManager *manager,
-    char *uuid)
+    struct TS3BookmarkEntry *entry,
+    const char *folder, const char *parent)
 {
-  sqlite3_stmt *stmt;
-  int result = sqlite3_prepare(manager->db, "SELECT value FROM ProtobufItems", -1, &stmt, NULL);
+  sqlite3_stmt *stmt = NULL;
+  int result = sqlite3_prepare(manager->db, "SELECT \"value\" FROM ProtobufItems", -1, &stmt, NULL);
 
   if (result != SQLITE_OK) {
+    sqlite3_finalize(stmt);
     return false;
   }
-
-  struct TS3BookmarkEntry entry = {0};
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     const unsigned char *buffer = sqlite3_column_blob(stmt, 0);
     int size = sqlite3_column_bytes(stmt, 0);
 
-    bool result = TS3Bookmarks_deserialize(&entry, buffer, size);
-    Logger_debugLog("Got GUID: %s", entry.guid);
-    Logger_debugLog("Got PUID: %s", entry.puid);
-    Logger_debugLog("Got timestamp: %ld", entry.timestamp);
+    struct TS3BookmarkEntry next = {0};
+    bool result = TS3Bookmarks_deserialize(&next, buffer, size);
 
     if (result) {
-      Logger_debugLog("Got bookmarkName: %s", entry.bookmarkName);
-      Logger_debugLog("Got serverAddress: %s", entry.serverAddress);
-      Logger_debugLog("Got serverPort: %d", entry.serverPort);
-      Logger_debugLog("Got nickname: %s", entry.nickname);
-      Logger_debugLog("Got serverPassword: %s", entry.serverPassword);
+      int foldercmp = strcmp(next.uuids.folder, folder);
+      int parentcmp = strcmp(next.uuids.parent, parent);
+
+      if (foldercmp == 0 && parentcmp == 0) {
+        memcpy(entry, &next, sizeof(next));
+        sqlite3_finalize(stmt);
+        return true;
+      }
     }
   }
 
   sqlite3_finalize(stmt);
+  return false;
+}
+
+static void TS3BookmarkManager_setSelfUUID(
+    struct TS3BookmarkManager *manager,
+    struct TS3BookmarkEntry *entry)
+{
+  uuid_t uuid;
+  uuid_generate_random(uuid);
+  uuid_unparse(uuid, entry->uuids.self);
+  time((time_t *) &entry->timestamp);
+}
+
+static void TS3BookmarkManager_setParentUUID(
+    struct TS3BookmarkManager *manager,
+    struct TS3BookmarkEntry *entry)
+{
+  struct TS3BookmarkEntry next = {0};
+  const char *folder = "";
+
+  bool result = TS3BookmarkManager_findBookmarkByUUIDs(manager, &next, folder, "");
+  if (result) {
+    while (TS3BookmarkManager_findBookmarkByUUIDs(manager, &next, folder, next.uuids.self));
+    sprintf(entry->uuids.parent, "%s", next.uuids.self);
+  }
+}
+
+static bool TS3BookmarkManager_nextBookmarkKey(
+    struct TS3BookmarkManager *manager,
+    char key[16])
+{
+  sqlite3_stmt *stmt = NULL;
+  int result = sqlite3_prepare(manager->db, "SELECT \"key\" FROM ProtobufItems", -1, &stmt, NULL);
+
+  if (result != SQLITE_OK) {
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  int next = 0;
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    const unsigned char *buffer = sqlite3_column_text(stmt, 0);
+
+    int current = atoi((const char *) buffer);
+    if (current > next) {
+      next = current;
+    }
+  }
+
+  snprintf(key, 16, "%d", next + 1);
+  sqlite3_finalize(stmt);
+
+  return true;
+}
+
+static bool TS3BookmarkManager_insertBookmark(
+    struct TS3BookmarkManager *manager,
+    struct TS3BookmarkEntry *entry,
+    char *key)
+{
+
+  unsigned char buffer[2048] = {0};
+  int length = TS3Bookmarks_serialize(entry, buffer, sizeof(buffer));
+
+  sqlite3_stmt *stmt = NULL;
+  int result = sqlite3_prepare(manager->db, "INSERT INTO ProtobufItems (\"timestamp\", \"key\", \"value\") VALUES (?, ?, ?)", -1, &stmt, NULL);
+
+  if (result != SQLITE_OK) {
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  sqlite3_bind_int (stmt, 1, entry->timestamp);
+  sqlite3_bind_text(stmt, 2, key, strlen(key), SQLITE_STATIC);
+  sqlite3_bind_blob(stmt, 3, buffer, length, SQLITE_STATIC);
+
+  bool success = sqlite3_step(stmt) == SQLITE_DONE;
+  sqlite3_finalize(stmt);
+
+  return success;
+}
+
+static bool TS3BookmarkManager_calculateChecksum(
+    struct TS3BookmarkManager *manager,
+    unsigned char checksum[20])
+{
+  sqlite3_stmt *stmt = NULL;
+  int result = sqlite3_prepare(manager->db, "SELECT \"value\" FROM ProtobufItems WHERE \"key\"!='Checksum'", -1, &stmt, NULL);
+
+  if (result != SQLITE_OK) {
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  SHA1_CTX sha1 = {0};
+  SHA1Init(&sha1);
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    const unsigned char *buffer = sqlite3_column_blob(stmt, 0);
+    int size = sqlite3_column_bytes(stmt, 0);
+
+    if (size > 0) {
+      SHA1Update(&sha1, buffer, size);
+    }
+  }
+
+  SHA1Final(checksum, &sha1);
+  sqlite3_finalize(stmt);
+
+  return true;
+}
+
+static bool TS3BookmarkManager_updateChecksum(
+    struct TS3BookmarkManager *manager,
+    unsigned char checksum[20])
+{
+  sqlite3_stmt *stmt = NULL;
+  int result = sqlite3_prepare(manager->db, "UPDATE ProtobufItems SET \"value\"=? WHERE \"key\"='Checksum'", -1, &stmt, NULL);
+
+  if (result != SQLITE_OK) {
+    return false;
+  }
+
+  sqlite3_bind_blob(stmt, 1, checksum, 20, SQLITE_STATIC);
+
+  bool success = sqlite3_step(stmt) == SQLITE_DONE;
+  sqlite3_finalize(stmt);
+
+  return success;
+}
+
+bool TS3BookmarkManager_appendNewBookmark(
+    struct TS3BookmarkManager *manager,
+    struct TS3BookmarkEntry *entry)
+{
+  char key[16] = {0};
+  if (!TS3BookmarkManager_nextBookmarkKey(manager, key)) {
+    Logger_errorLog("Failed to append new bookmark: could not find next bookmark key");
+    return false;
+  }
+
+  Logger_debugLog("Using '%s' as next key for new bookmark entry", key);
+
+  TS3BookmarkManager_setSelfUUID(manager, entry);
+  Logger_debugLog("Assigned %s as self UUID for new bookmark entry", entry->uuids.self);
+
+  TS3BookmarkManager_setParentUUID(manager, entry);
+  Logger_debugLog("Assigned %s as parent UUID for new bookmark entry", entry->uuids.parent);
+
+  if (!TS3BookmarkManager_insertBookmark(manager, entry, key)) {
+    Logger_errorLog("Failed to append new bookmark: could not insert new bookmark entry");
+    return false;
+  }
+
+  unsigned char checksum[20] = {0};
+  if (!TS3BookmarkManager_calculateChecksum(manager, checksum)) {
+    Logger_errorLog("Failed to append new bookmark: could not calculate new checksum");
+    return false;
+  }
+
+  if (!TS3BookmarkManager_updateChecksum(manager, checksum)) {
+    Logger_errorLog("Failed to append new bookmark: could not update new checksum");
+    return false;
+  }
+
   return true;
 }
 
@@ -109,12 +283,12 @@ bool TS3Bookmarks_deserialize(
   unsigned int type = -1;
   unsigned int subtype = -1;
 
-  pb_istream_read_string(&stream, entry->guid, sizeof(entry->guid), 2);
+  pb_istream_read_string(&stream, entry->uuids.self, sizeof(entry->uuids.self), 2);
   pb_istream_read_varint(&stream, &type, 4);
   pb_istream_read_buffer(&stream, NULL, 0, 5);
   pb_istream_read_varint(&stream, &subtype, 6);
-  pb_istream_read_buffer(&stream, NULL, 0, 7);
-  pb_istream_read_string(&stream, entry->puid, sizeof(entry->puid), 8);
+  pb_istream_read_string(&stream, entry->uuids.folder, sizeof(entry->uuids.folder), 7);
+  pb_istream_read_string(&stream, entry->uuids.parent, sizeof(entry->uuids.parent), 8);
   pb_istream_read_varlong(&stream, &entry->timestamp, 9);
 
   if (type != 0 || subtype != 0) {
@@ -166,12 +340,12 @@ int TS3Bookmarks_serialize(
   pb_ostream_t stream = pb_ostream_from_buffer(buffer, size);
   const char *spacer = "ffffffff-ffff-ffff-ffff-ffffffffffff";
 
-  pb_ostream_write_string(&stream, entry->guid, 2);
+  pb_ostream_write_string(&stream, entry->uuids.self, 2);
   pb_ostream_write_varint(&stream, 0, 4);
   pb_ostream_write_string(&stream, spacer, 5);
   pb_ostream_write_varint(&stream, 0, 6);
-  pb_ostream_write_string(&stream, "", 7);
-  pb_ostream_write_string(&stream, entry->puid, 8);
+  pb_ostream_write_string(&stream, entry->uuids.folder, 7);
+  pb_ostream_write_string(&stream, entry->uuids.parent, 8);
   pb_ostream_write_varint(&stream, entry->timestamp, 9);
 
   unsigned char subbuffer[512] = {0};

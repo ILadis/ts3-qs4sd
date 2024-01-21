@@ -1,6 +1,7 @@
 #ifndef PROTOBUF_H
 #define PROTOBUF_H
 
+#include "../vnd/sha1.h"
 #include "../vnd/pb_encode.h"
 #include "../vnd/pb_decode.h"
 
