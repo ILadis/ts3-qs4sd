@@ -40,7 +40,7 @@ export function TS3SetupHints() {
     $(PanelSection, null,
       $(PanelSectionRow, null,
         $(Field, { label: 'SETUP' }, ''
-          + 'TeamSpeak 3 is not installed. Please switch to gaming mode and '
+          + 'TeamSpeak 3 is not installed. Please switch to desktop mode and '
           + 'download TeamSpeak 3 from the Discover store. Make sure to add '
           + 'all TeamSpeak servers you want to connect to as bookmarks. '
           + 'Then come back here.'
