@@ -54,9 +54,9 @@ This should create a `plugin.zip` file containing both the front- and backend pa
 
 Follow these steps in order to install and setup the plugin on your Steam Deck:
 1. Install DeckyLoader on your SteamDeck as described [here](https://github.com/SteamDeckHomebrew/PluginLoader).
-1. Switch to desktop mode, download TeamSpeak from the Discover store and launch it.
+1. Switch to desktop mode, download TeamSpeak 3 from the Discover store and launch it.
 1. Add all TeamSpeak servers you want to connect to as bookmarks (Bookmarks ⇾ Manage Bookmarks).
-1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs: `flatpak override --user com.teamspeak.TeamSpeak --device=all`
+1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs: `flatpak override --user com.teamspeak.TeamSpeak3 --device=all`
 1. Switch back to gaming mode and install TS3 QuickAccess from the DeckyLoader store.
 
 To install the plugin manually follow steps 1-4 from above and then:
