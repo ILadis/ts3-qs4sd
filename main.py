@@ -12,7 +12,6 @@ import decky_plugin
 class Plugin:
   async def _main(plugin):
     plugin.teamspeak = FlatpakTeamSpeak()
-    plugin.clientlib = Clientlib()
 
   async def install(plugin):
     decky_plugin.logger.debug('Attempting to install TeamSpeak 3')
@@ -20,9 +19,7 @@ class Plugin:
 
   async def start(plugin):
     decky_plugin.logger.debug('Attempting to install TeamSpeak 3 client plugin')
-
-    file = plugin.clientlib.filepath
-    plugin.teamspeak.install_plugin(file)
+    plugin.teamspeak.install_plugin()
 
     decky_plugin.logger.debug('Attempting to start TeamSpeak 3')
     plugin.teamspeak.start()
@@ -43,17 +40,6 @@ class Plugin:
     decky_plugin.logger.debug('Unloading plugin, attempt to stop TeamSpeak 3')
     plugin.teamspeak.stop()
 
-class Clientlib:
-  def __init__(self):
-    self.filepath = decky_plugin.DECKY_PLUGIN_DIR + '/bin/ts3-qs4sd.so'
-    self.handle = ctypes.cdll.LoadLibrary(self.filepath)
-
-  def add_bookmark(self, dbpath, nickname, bookmark_name, address, port):
-    add = self.handle.TS3BookmarkManager_addBookmark
-    add.restype = ctypes.c_bool
-    add.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
-    return add(dbpath, nickname, bookmark_name, address, port)
-
 class TeamSpeak:
   def configdir():
     pass
@@ -73,27 +59,37 @@ class TeamSpeak:
   def install(self):
     return False
 
-  def install_plugin(self, file):
+  def install_plugin(self):
     if not self.is_installed() or self.is_running():
       return False
 
-    filename = os.path.basename(file)
-    target = self.configdir() + '/plugins/' + filename
+    source = decky_plugin.DECKY_PLUGIN_DIR + '/bin/ts3-qs4sd.so'
+    target = self.configdir() + '/plugins/ts3-qs4sd.so'
 
     if os.path.exists(target):
       os.chmod(target, 0o755)
 
     try:
-      shutil.copy(file, target)
+      shutil.copy(source, target)
       return True
     except:
       return False
+
+  def add_bookmark(self, dbpath, nickname, bookmark_name, address, port):
+    library = decky_plugin.DECKY_PLUGIN_DIR + '/bin/ts3-qs4sd.so'
+    handle = ctypes.cdll.LoadLibrary(library)
+
+    add = handle.TS3BookmarkManager_addBookmark
+    add.restype = ctypes.c_bool
+    add.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+
+    return add(dbpath, nickname, bookmark_name, address, port)
 
 class NativeTeamSpeak(TeamSpeak):
   def __init__(self):
     self.process = None
     self.version = '3.6.2'
-    self.installdir = '/tmp/teamspeak3'
+    self.installdir = '/opt/teamspeak3'
     self.executable = 'ts3client_linux_amd64'
 
   def configdir(self):
@@ -144,7 +140,6 @@ class NativeTeamSpeak(TeamSpeak):
   def is_installed(self):
     executable = f'{self.installdir}/{self.executable}'
     installed = os.path.exists(executable) is True
-
     return installed
 
   def install(self):

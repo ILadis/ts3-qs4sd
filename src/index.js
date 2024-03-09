@@ -6,7 +6,6 @@ import { Client } from './client';
 import { TS3QuickAccessPanel, TS3ChannelPasswordPrompt, TS3LogoIcon } from './components';
 import { retry, dispatch, debounce } from './utils.js'
 
-
 function App({ client }) {
   const [content, setContent] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
@@ -167,6 +166,7 @@ function App({ client }) {
       self,
       outputs,
       // actions
+      setContent,
       connectTo,
       joinChannel,
       disconnect,
