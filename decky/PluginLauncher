@@ -7,7 +7,7 @@ export LIVE_RELOAD=1
 export CHOWN_PLUGIN_PATH=0
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LOG_LEVEL='DEBUG'
-export DECKY_VERSION='v2.10.10'
+export DECKY_VERSION='v2.11.1'
 export DECKY_DEVELOP=1
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
@@ -24,5 +24,8 @@ fi
 # $ ssh -T -R 1337:127.0.0.1:1337 deck
 # $ ssh -T -R 52259:127.0.0.1:52259 deck
 
-chmod +x "${SELF_DIR}/services/PluginLoader"
-exec "${SELF_DIR}/services/PluginLoader"
+(
+  cd "${SELF_DIR}/services"
+  chmod +x "${SELF_DIR}/services/PluginLoader"
+  exec "${SELF_DIR}/services/PluginLoader"
+)
