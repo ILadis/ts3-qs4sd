@@ -142,7 +142,7 @@ export function TS3ChannelPasswordPrompt(props) {
     $(ModalRoot, { closeModal: () => reject() },
       $(DialogHeader, null, 'Enter Password'),
       $(DialogBody, null,
-        $(TextField, { bIsPassword: true, onChange: (input) => password = input.target.value })
+        $(TextField, { bIsPassword: true, type: 'password', onChange: (input) => password = input.target.value })
       ),
       $(DialogFooter, { style },
         $(DialogButton, { onClick: () => (resolve(password), closeModal()) }, 'OK'),
