@@ -76,7 +76,9 @@ export function TS3Dashboard(props) {
   return (
     $(PanelSection, { title: server.name },
       $(TS3DashboardActions, props),
-      channels.map(channel => $(PanelSectionRow, null, $(TS3ClientList, { channel, joinChannel }))),
+      $(Focusable, null, channels.map(channel =>
+        $(PanelSectionRow, null, $(TS3ClientList, { channel, joinChannel })))
+      )
     )
   );
 }
@@ -128,8 +130,8 @@ export function TS3ClientList(props) {
         $('span', { className: 'channel-count' }, channel.clients.length), channel.name
       )),
       $(Focusable, null, channel.clients.map(client =>
-        $(TS3ClientItem, { client })
-      ))
+        $(TS3ClientItem, { client }))
+      )
     )
   );
 }
@@ -240,9 +242,12 @@ TS3ChannelPasswordPrompt.show = function() {
 
 export function TS3Settings(props) {
   const {
+    self,
     outputs,
     outputChanged,
     toggleOutputs,
+    rebindPttHotkey,
+    clearPttHotkey,
     setContent,
   } = props;
 
@@ -250,22 +255,42 @@ export function TS3Settings(props) {
 
   return (
     $(PanelSection, { title: 'SETTINGS' },
-      $(Focusable, { onCancel }, $(PanelSectionRow, null,
-        $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
-          $(DialogButton, { onClick: () => toggleOutputs() }, 'Volume Settings')
-        )),
-        outputs.map(output => $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged }))),
+      $(Focusable, { onCancel },
+        $(TS3VolumeSettings, { outputs, outputChanged, toggleOutputs }),
+        $(TS3PttSettings, { self, rebindPttHotkey, clearPttHotkey }),
       )
     )
   );
 }
 
-export function TS3OutputDevice(props) {
+export function TS3VolumeSettings(props) {
   const {
-    output,
+    outputs,
     outputChanged,
+    toggleOutputs,
   } = props;
 
+  return [
+    $(PanelSectionRow, null,
+      $(Field, { label: 'Volumes', bottomSeparator: 'none', description: ''
+        + 'View and change volumes of applications which are '
+        + 'playing back audio.'
+      })
+    ),
+    $(PanelSectionRow, null,
+      $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
+        $(DialogButton, { onClick: () => toggleOutputs() }, outputs.length <= 0
+          ? 'Show applications' : 'Hide applications'
+        )
+      )
+    ),
+    $(Focusable, null, outputs.map(output =>
+      $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged })))
+    ),
+  ];
+}
+
+export function TS3OutputDevice({ output, outputChanged }) {
   return (
     $(SliderField, {
       label: output.name,
@@ -275,6 +300,45 @@ export function TS3OutputDevice(props) {
       step: 0.05
     })
   );
+}
+
+export function TS3PttSettings(props) {
+  const {
+    self,
+    rebindPttHotkey,
+    clearPttHotkey,
+  } = props;
+
+  const state = self.ptt.state;
+  const rebind = state == 'rebinding';
+  const disabled = state == 'unavailable';
+
+  const hint = {
+    'unavailable': 'Push to Talk is unavailable, additional setup is required.',
+    'disabled':    'Push to Talk can be enabled by selecting L/R 4-5 as a hotkey button.',
+    'rebinding':   'Press L/R 4-5 now to select a button as a hotkey for Push to Talk.',
+    'active':      `Push to Talk is enabled and bound to hotkey button ${self.ptt.hotkey}.`,
+  };
+
+  const style = {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'gap': '4px',
+  };
+
+  return [
+    $(PanelSectionRow, null,
+      $(Field, { label: 'Push to Talk', bottomSeparator: 'none', description: hint[state] })
+    ),
+    $(PanelSectionRow, null,
+      $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
+        $(Focusable, { style },
+          $(DialogButton, { onClick: () => rebindPttHotkey(), disabled }, rebind ? 'Press a button...' : 'Bind PTT hotkey'),
+          $(DialogButton, { onClick: () => clearPttHotkey(), disabled }, 'Clear PTT hotkey'),
+        )
+      )
+    )
+  ];
 }
 
 export function TS3IconButton({ icon, onClick }) {

@@ -2,8 +2,6 @@
 #include "ts3remote.h"
 #include "plugin.h"
 
-#define length(array) (sizeof(array)/sizeof(array[0]))
-
 static void TS3Remote_resetClientList(struct TS3Remote *remote);
 static void TS3Remote_resetCursor(struct TS3Remote *remote);
 static void TS3Remote_resetBrowser(struct TS3Remote *remote);
@@ -13,6 +11,7 @@ struct TS3Remote* TS3Remote_getInstance(uint64 handle) {
 
   if (ts3remote.handle == 0) {
     ts3remote.handle = handle;
+    ts3remote.pttHotkey = TS3_PTT_HOTKEY_NONE;
     return &ts3remote;
   }
 

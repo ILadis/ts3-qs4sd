@@ -1,6 +1,6 @@
 
 # source and target files
-CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c) \
+CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c)
 CFILES   += vnd/mongoose.c vnd/mjson.c vnd/pb_common.c vnd/pb_encode.c vnd/pb_decode.c vnd/sha1.c
 
 CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread

@@ -2,8 +2,6 @@
 #include "../server.h"
 #include "../api.h"
 
-#include "../plugin.h"
-
 static const char *tag = "EVENTS";
 
 static inline void mg_handler_events_set_tag(struct mg_connection *conn) {
@@ -41,6 +39,9 @@ static void mg_handler_events_fn(
       break;
     case AUDIO_OUTPUTS_CHANGED:
       type = "AUDIO_OUTPUTS_CHANGED";
+      break;
+    case PTT_HOTKEYS_PRESSED:
+      type = "PTT_HOTKEYS_PRESSED";
       break;
     }
 

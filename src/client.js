@@ -1,5 +1,5 @@
 
-import { retry, sleep, fətch } from './utils.js'
+import { retry, sleep, fətch, generate } from './utils.js'
 
 export function Client(endpoint, api) {
   let self = new URL(import.meta.url);
@@ -121,8 +121,55 @@ Client.prototype.getSelf = async function() {
     'muted': {
       'input': Boolean(client['input_muted']),
       'output': Boolean(client['output_muted']),
+    },
+    'ptt': {
+      'state': String(client['ptt_state']),
+      'hotkey': String(client['ptt_hotkey']),
     }
   };
+};
+
+Client.prototype.rebindPttHotkey = async function() {
+  let url = this.endpoint + '/self/ptt/rebind';
+
+  let request = new Request(url, {
+    method: 'POST'
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error('failed to rebind ptt hotkey');
+  }
+};
+
+Client.prototype.clearPttHotkey = async function() {
+  let url = this.endpoint + '/self/ptt/clear';
+
+  let request = new Request(url, {
+    method: 'POST'
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error('failed to clear ptt hotkey');
+  }
+};
+
+Client.prototype.muteSelf = async function(id, device, mute) {
+  let url = this.endpoint + '/self/' + (mute ? 'mute' : 'unmute');
+  let body = JSON.stringify({
+    'client_id': Number(id),
+    'device': String(device),
+  });
+
+  let request = new Request(url, {
+    method: 'POST', body
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error(`failed to mute/unmute ${device} device of client ${id}`);
+  }
 };
 
 Client.prototype.getAudioOutputs = async function*() {
@@ -206,23 +253,6 @@ Client.prototype.listChannels = async function() {
   }
 
   return channels;
-};
-
-Client.prototype.muteClient = async function(id, device, mute) {
-  let url = this.endpoint + '/clients/' + (mute ? 'mute' : 'unmute');
-  let body = JSON.stringify({
-    'client_id': Number(id),
-    'device': String(device),
-  });
-
-  let request = new Request(url, {
-    method: 'POST', body
-  });
-
-  let response = await retry(() => fətch(request.clone()));
-  if (!response.ok) {
-    throw new Error(`failed to mute/unmute ${device} device of client ${id}`);
-  }
 };
 
 Client.prototype.moveCursor = async function(channel) {
@@ -314,9 +344,11 @@ Client.prototype.moveBrowser = async function(channel) {
   }
 };
 
-Client.prototype.listenEvents = function*() {
+Client.prototype.listenEvents = function() {
   const url = this.endpoint + '/events';
-  var source = connect(), resolve = () => { };
+
+  var { iterator, take } = generate();
+  var source = connect();
 
   function connect() {
     source?.close();
@@ -332,12 +364,26 @@ Client.prototype.listenEvents = function*() {
 
   function consume(event) {
     let data = JSON.parse(event.data);
-    resolve(data);
+    take(data);
   }
 
-  while (true) {
-    let next = new Promise(r => resolve = r);
-    next.cancel = () => source?.close();
-    yield next;
+  return iterator();
+};
+
+Client.prototype.waitEvent = function(type) {
+  const url = this.endpoint + '/events';
+  const source = new EventSource(url);
+
+  function consume(resolve, event) {
+    let data = JSON.parse(event.data);
+    if (data.type == type) {
+      source.close();
+      resolve(data);
+    }
   }
+
+  return new Promise((resolve, reject) => {
+    source.onmessage = (event) => consume(resolve, event);
+    source.onerror = reject;
+  });
 };

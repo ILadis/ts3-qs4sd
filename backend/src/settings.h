@@ -6,8 +6,9 @@
 /* For testing on Steam Deck setup port forwarding between
  * development machine and Steam Deck via SSH:
  *
- * $ ssh -T -L 8080:localhost:8081 deck
- * $ ssh -T -R 8000:127.0.0.1:8000 deck
+ * $ ssh -T -R 52259:127.0.0.1:52259 deck
+ * $ ssh -T -L 8080:127.0.0.1:8080 deck
+ * $ ssh -T -R 1337:127.0.0.1:1337 deck
  */
 
 #define CORS_ORIGIN "https://steamloopback.host"

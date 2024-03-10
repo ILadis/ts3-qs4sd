@@ -33,7 +33,7 @@ struct TS3Remote {
   struct TS3Server {
     int status;
     char *name;
-    struct TS3Bookmark bookmarks[20];
+    struct TS3Bookmark bookmarks[50];
     int numBookmarks;
   } server;
 
@@ -44,29 +44,34 @@ struct TS3Remote {
     bool outputMuted;
   } client; // self
 
+  int pttHotkey;
+
   // used to list all available clients and their current channel
   struct TS3ClientList {
     int size;
     struct {
       struct TS3Client client;
       struct TS3Channel channel;
-    } items[20];
+    } items[50];
   } clientList;
 
   // used to peek into channel
   struct TS3Cursor {
     struct TS3Channel channel;
-    struct TS3Client clients[20];
+    struct TS3Client clients[50];
     int numClients;
   } cursor;
 
   // used to browse available channels
   struct TS3Browser {
     struct TS3Channel channel;
-    struct TS3Channel childs[20];
+    struct TS3Channel childs[50];
     int numChilds;
   } browser;
 };
+
+#define TS3_PTT_HOTKEY_NONE   -1
+#define TS3_PTT_HOTKEY_REBIND -2
 
 #define TS3Remote_guardHandleIsset(remote, ...) do { if (remote->handle == 0) return __VA_ARGS__; } while(0);
 

@@ -2,7 +2,6 @@
 #include "../server.h"
 #include "../api.h"
 
-#include "../plugin.h"
 #include "../ts3remote.h"
 
 static void mg_handler_get_cursor_fn(

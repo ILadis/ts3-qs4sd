@@ -4,7 +4,7 @@ import { definePlugin } from 'decky-frontend-lib';
 
 import { Client } from './client';
 import { TS3QuickAccessPanel, TS3ChannelPasswordPrompt, TS3LogoIcon } from './components';
-import { retry, dispatch, debounce } from './utils.js'
+import { retry, debounce } from './utils.js'
 
 function App({ client }) {
   const [content, setContent] = useState(null);
@@ -53,9 +53,21 @@ function App({ client }) {
     }
   }
 
+  async function rebindPttHotkey() {
+    await client.rebindPttHotkey();
+    await client.getSelf().then(setSelf);
+    await client.waitEvent('PTT_HOTKEYS_PRESSED');
+    await client.getSelf().then(setSelf);
+  }
+
+  async function clearPttHotkey() {
+    await client.clearPttHotkey();
+    await client.getSelf().then(setSelf);
+  }
+
   async function toggleMute(device) {
     const state = !self.muted[device];
-    await client.muteClient(self.id, device, state);
+    await client.muteSelf(self.id, device, state);
 
     setSelf((self) => {
       self.muted[device] = state
@@ -105,28 +117,17 @@ function App({ client }) {
     }
   }
 
-  function handleEvent(event) {
+  async function listenEvents() {
     const states = {
       'CONNECTION_STATE_CONNECTED': refreshBookmarksState,
       'CONNECTION_STATE_DISCONNECTED': refreshBookmarksState,
       'CLIENT_LIST_CHANGED': refreshDashboardState,
     };
 
-    states[event.type]?.();
-  }
-
-  function listenEvents() {
     const events = client.listenEvents();
-    let promise = null;
-
-    async function nextEvent() {
-      promise = events.next().value;
-      promise.then(handleEvent).then(nextEvent);
+    for await (let event of events) {
+      states[event.type]?.();
     }
-
-    dispatch(nextEvent);
-
-    return () => promise?.cancel();
   }
 
   async function refreshBookmarksState() {
@@ -153,7 +154,7 @@ function App({ client }) {
     setContent('dashboard');
   }
 
-  useEffect(() => (restoreState(), listenEvents()), []);
+  useEffect(() => void (restoreState(), listenEvents()), []);
 
   return (
     $(TS3QuickAccessPanel, {
@@ -173,6 +174,8 @@ function App({ client }) {
       browseChannels,
       browseOnRoot,
       browseParentChannels,
+      rebindPttHotkey,
+      clearPttHotkey,
       toggleMute,
       toggleOutputs,
       // events

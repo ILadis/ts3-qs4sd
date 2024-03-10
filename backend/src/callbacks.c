@@ -40,6 +40,7 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_get_clientlist());
   mg_server_add_handler(&server, mg_handler_get_clientavatar());
   mg_server_add_handler(&server, mg_handler_get_self());
+  mg_server_add_handler(&server, mg_handler_alter_ptt());
   mg_server_add_handler(&server, mg_handler_mute_toggle_self());
   mg_server_add_handler(&server, mg_handler_afk_toggle_self());
   mg_server_add_handler(&server, mg_handler_get_cursor());
@@ -50,7 +51,6 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_events());
   mg_server_add_handler(&server, mg_handler_get_audio_outputs());
   mg_server_add_handler(&server, mg_handler_set_audio_output_volume());
-  mg_server_add_handler(&server, mg_handler_static_resources());
 
   bool result = mg_server_start(&server, SERVER_PORT);
   if (!result) {
@@ -199,21 +199,49 @@ void paudio_onError(struct PAudio *paudio, const char *message) {
 void sdinput_onUpdate(struct SDInput *input) {
   static bool talk = false;
 
-  if (input->previous.L5 == true && input->current.L5 == true) {
-    if (!talk) {
-      Logger_infoLog("L5 button is held: PTT active");
+  enum SDInputKey pttHotkey;
+  enum SDInputKey pttHotkeys[] = {
+    SDINPUT_KEY_L4,
+    SDINPUT_KEY_L5,
+    SDINPUT_KEY_R4,
+    SDINPUT_KEY_R5,
+  };
 
-      struct TS3Remote *remote = TS3Remote_getInstance(0);
-      TS3Remote_shouldTalk(remote, talk = true);
+  struct TS3Remote *remote = TS3Remote_getInstance(0);
+
+  // enable/disable talking by hotkey
+  if (SDInputKey_byId(&pttHotkey, remote->pttHotkey)) {
+    const char *pttHotkeyName = SDInputKey_getName(pttHotkey);
+
+    if (SDInput_isKeyHeld(input, pttHotkey)) {
+      if (!talk) {
+        Logger_infoLog("%s button is held: PTT active", pttHotkeyName);
+        TS3Remote_shouldTalk(remote, talk = true);
+      }
+    }
+    if (SDInput_isKeyReleased(input, pttHotkey)) {
+      if (talk) {
+        Logger_infoLog("%s button is NOT held: PTT inactive", pttHotkeyName);
+        TS3Remote_shouldTalk(remote, talk = false);
+      }
     }
   }
 
-  else if (input->previous.L5 == false && input->current.L5 == false) {
-    if (talk) {
-      Logger_infoLog("L5 button is NOT held: PTT inactive");
+  // notify and rebind hotkeys for PTT
+  bool notified = false;
+  bool rebind = remote->pttHotkey == TS3_PTT_HOTKEY_REBIND;
 
-      struct TS3Remote *remote = TS3Remote_getInstance(0);
-      TS3Remote_shouldTalk(remote, talk = false);
+  for (int i = 0; i < length(pttHotkeys); i++) {
+    enum SDInputKey key = pttHotkeys[i];
+
+    if (SDInput_hasKeyChanged(input, key) && !notified) {
+      mg_server_user_event(&server, PTT_HOTKEYS_PRESSED, NULL);
+      notified = true;
+    }
+
+    if (SDInput_isKeyHeld(input, key) && rebind) {
+      remote->pttHotkey = (int) key;
+      rebind = false;
     }
   }
 }

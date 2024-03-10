@@ -13,7 +13,7 @@ static int SDInput_openDeviceIfMatches(
     unsigned int ifacenum)
 {
   int fd = open(path, O_RDWR|O_NONBLOCK);
-  if (fd < 0) {
+  if (fd <= 0) {
     goto error;
   }
 
@@ -104,18 +104,20 @@ bool SDInput_pollState(struct SDInput *input) {
 
   struct SDButtons buttons = {0};
 
-  buttons.A  = data[ 8] & 0b10000000;
-  buttons.X  = data[ 8] & 0b01000000;
-  buttons.B  = data[ 8] & 0b00100000;
-  buttons.Y  = data[ 8] & 0b00010000;
-  buttons.L1 = data[ 8] & 0b00001000;
-  buttons.R1 = data[ 8] & 0b00000100;
-  buttons.L2 = data[ 8] & 0b00000010;
-  buttons.R2 = data[ 8] & 0b00000001;
-
-  buttons.L5  = data[ 9] & 0b10000000;
-  buttons.R5  = data[10] & 0b00000001;
-  buttons.R3  = data[10] & 0b00000100;
+  buttons.keys[SDINPUT_KEY_A]  = (data[ 8] & 0b10000000) > 0;
+  buttons.keys[SDINPUT_KEY_X]  = (data[ 8] & 0b01000000) > 0;
+  buttons.keys[SDINPUT_KEY_B]  = (data[ 8] & 0b00100000) > 0;
+  buttons.keys[SDINPUT_KEY_Y]  = (data[ 8] & 0b00010000) > 0;
+  buttons.keys[SDINPUT_KEY_L1] = (data[ 8] & 0b00001000) > 0;
+  buttons.keys[SDINPUT_KEY_R1] = (data[ 8] & 0b00000100) > 0;
+  buttons.keys[SDINPUT_KEY_L2] = (data[ 8] & 0b00000010) > 0;
+  buttons.keys[SDINPUT_KEY_R2] = (data[ 8] & 0b00000001) > 0;
+  buttons.keys[SDINPUT_KEY_L3] = (data[10] & 0b01000000) > 0;
+  buttons.keys[SDINPUT_KEY_R3] = (data[10] & 0b00000100) > 0;
+  buttons.keys[SDINPUT_KEY_L4] = (data[13] & 0b00000010) > 0;
+  buttons.keys[SDINPUT_KEY_R4] = (data[13] & 0b00000100) > 0;
+  buttons.keys[SDINPUT_KEY_L5] = (data[ 9] & 0b10000000) > 0;
+  buttons.keys[SDINPUT_KEY_R5] = (data[10] & 0b00000001) > 0;
 
   input->previous = input->current;
   input->current = buttons;
@@ -123,4 +125,58 @@ bool SDInput_pollState(struct SDInput *input) {
   sdinput_onUpdate(input);
 
   return true;
+}
+
+bool SDInput_isKeyHeld(
+    struct SDInput *input,
+    enum SDInputKey key)
+{
+  return input->previous.keys[key] == true && input->current.keys[key] == true;
+}
+
+bool SDInput_isKeyReleased(
+    struct SDInput *input,
+    enum SDInputKey key)
+{
+  return input->previous.keys[key] == false && input->current.keys[key] == false;
+}
+
+bool SDInput_hasKeyChanged(
+    struct SDInput *input,
+    enum SDInputKey key)
+{
+  return input->previous.keys[key] != input->current.keys[key];
+}
+
+bool SDInputKey_byId(
+    enum SDInputKey *key,
+    int id)
+{
+  if (id >= 0 && id < SDINPUT_KEY_COUNT) {
+    *key = (enum SDInputKey) id;
+    return true;
+  }
+
+  return false;
+}
+
+const char* SDInputKey_getName(enum SDInputKey key) {
+  static const char *names[] = {
+    [SDINPUT_KEY_A]  = "A",
+    [SDINPUT_KEY_B]  = "B",
+    [SDINPUT_KEY_X]  = "X",
+    [SDINPUT_KEY_Y]  = "Y",
+    [SDINPUT_KEY_L1] = "L1",
+    [SDINPUT_KEY_L2] = "L2",
+    [SDINPUT_KEY_L3] = "L3",
+    [SDINPUT_KEY_L4] = "L4",
+    [SDINPUT_KEY_L5] = "L5",
+    [SDINPUT_KEY_R1] = "R1",
+    [SDINPUT_KEY_R2] = "R2",
+    [SDINPUT_KEY_R3] = "R3",
+    [SDINPUT_KEY_R4] = "R4",
+    [SDINPUT_KEY_R5] = "R5",
+  };
+
+  return names[key];
 }

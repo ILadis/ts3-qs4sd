@@ -1,7 +1,6 @@
 
 #include "paudio.h"
-
-#define length(array) (sizeof(array)/sizeof(array[0]))
+#include "plugin.h"
 
 static void PAudio_subscriptionCallback(pa_context *context, pa_subscription_event_type_t event, uint32_t index, void *data);
 static void PAudio_contextStateCallback(pa_context *context, void *data);

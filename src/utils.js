@@ -55,6 +55,22 @@ export function debounce(action, millis = 200) {
   }
 }
 
+export function generate() {
+  let resolve = () => { };
+
+  return { iterator, take };
+
+  function* iterator() {
+    while (true) {
+      yield new Promise(r => resolve = r);
+    }
+  }
+
+  function take(item) {
+    resolve(item);
+  }
+}
+
 export async function fətch(request) {
   let response = await window.fetch(request);
   if (!response.ok) {
