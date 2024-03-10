@@ -1,14 +1,11 @@
 
 # source and target files
 CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c) \
-            $(wildcard src/injector/*.c) $(wildcard src/injector/states/*.c) \
-            $(wildcard src/static/*.c)
-
 CFILES   += vnd/mongoose.c vnd/mjson.c vnd/pb_common.c vnd/pb_encode.c vnd/pb_decode.c vnd/sha1.c
+
 CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
-CFLAGS   += `pkg-config --cflags --libs libpulse`
-CFLAGS   += `pkg-config --cflags --libs sqlite3`
-CFLAGS   += `pkg-config --cflags --libs uuid`
+CFLAGS   += `pkg-config --cflags --libs libpulse sqlite3 uuid`
+
 TARGET   := ts3-qs4sd.so
 
 # toolchain and flags
@@ -27,7 +24,6 @@ install:
 vendor:
 	@mkdir -p vnd/teamspeak/teamlog
 	@curl https://github.com/wheybags/glibc_version_header/raw/master/version_headers/x64/force_link_glibc_2.27.h -Lso vnd/glibc_2.27.h
-	@curl https://github.com/graphitemaster/incbin/raw/main/incbin.h -Lso vnd/incbin.h
 	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.c -Lso vnd/mjson.c
 	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.h -Lso vnd/mjson.h
 	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.c -Lso vnd/mongoose.c
