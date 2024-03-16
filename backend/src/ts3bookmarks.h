@@ -11,6 +11,8 @@
 
 #include <sqlite3.h>
 
+#include "../vnd/mongoose.h"
+
 struct TS3BookmarkEntry {
   unsigned long timestamp;
   struct {
@@ -29,8 +31,7 @@ struct TS3BookmarkManager {
   sqlite3 *db;
 };
 
-bool
-TS3BookmarkManager_addBookmark(
+bool TS3BookmarkManager_addBookmark(
     const char *dbpath,
     const char *nickname,
     const char *bookmarkName,

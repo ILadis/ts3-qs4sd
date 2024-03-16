@@ -3,8 +3,7 @@
 #include "protobuf.h"
 #include "log.h"
 
-bool
-TS3BookmarkManager_addBookmark(
+bool TS3BookmarkManager_addBookmark(
     const char *dbpath,
     const char *nickname,
     const char *bookmarkName,
@@ -183,19 +182,19 @@ static bool TS3BookmarkManager_calculateChecksum(
     return false;
   }
 
-  SHA1_CTX sha1 = {0};
-  SHA1Init(&sha1);
+  mg_sha1_ctx sha1 = {0};
+  mg_sha1_init(&sha1);
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     const unsigned char *buffer = sqlite3_column_blob(stmt, 0);
     int size = sqlite3_column_bytes(stmt, 0);
 
     if (size > 0) {
-      SHA1Update(&sha1, buffer, size);
+      mg_sha1_update(&sha1, buffer, size);
     }
   }
 
-  SHA1Final(checksum, &sha1);
+  mg_sha1_final(checksum, &sha1);
   sqlite3_finalize(stmt);
 
   return true;
@@ -259,17 +258,21 @@ bool TS3BookmarkManager_appendNewBookmark(
 
 static bool TS3BookmarkEntry_deserialize(
     struct TS3BookmarkEntry *entry,
-    unsigned char *buffer, int size)
+    const unsigned char *buffer, int size)
 {
-  pb_istream_t stream = pb_istream_from_buffer(buffer, size);
+  struct Protobuf proto = Protobuf_wrapNew(buffer, size);
 
-  pb_istream_read_string(&stream, entry->bookmarkName, sizeof(entry->bookmarkName), 1);
-  pb_istream_read_string(&stream, entry->serverAddress, sizeof(entry->serverAddress), 2);
-  pb_istream_read_varint(&stream, &entry->serverPort, 3);
-  pb_istream_read_string(&stream, entry->nickname, sizeof(entry->nickname), 4);
-  pb_istream_read_buffer(&stream, NULL, 0, 5);
-  pb_istream_read_buffer(&stream, NULL, 0, 6);
-  pb_istream_read_string(&stream, entry->serverPassword, sizeof(entry->serverPassword), 7);
+  if (size < 0) {
+    return false;
+  }
+
+  Protobuf_readString(&proto, entry->bookmarkName, sizeof(entry->bookmarkName), 1);
+  Protobuf_readString(&proto, entry->serverAddress, sizeof(entry->serverAddress), 2);
+  Protobuf_readUInt  (&proto, &entry->serverPort, 3);
+  Protobuf_readString(&proto, entry->nickname, sizeof(entry->nickname), 4);
+  Protobuf_readBuffer(&proto, NULL, -1, 5);
+  Protobuf_readBuffer(&proto, NULL, -1, 6);
+  Protobuf_readString(&proto, entry->serverPassword, sizeof(entry->serverPassword), 7);
 
   return true;
 }
@@ -278,79 +281,84 @@ bool TS3Bookmarks_deserialize(
     struct TS3BookmarkEntry *entry,
     const unsigned char *buffer, int size)
 {
-  pb_istream_t stream = pb_istream_from_buffer(buffer, size);
+  struct Protobuf proto = Protobuf_wrapNew(buffer, size);
+
+  if (size < 0) {
+    return false;
+  }
 
   unsigned int type = -1;
   unsigned int subtype = -1;
 
-  pb_istream_read_string(&stream, entry->uuids.self, sizeof(entry->uuids.self), 2);
-  pb_istream_read_varint(&stream, &type, 4);
-  pb_istream_read_buffer(&stream, NULL, 0, 5);
-  pb_istream_read_varint(&stream, &subtype, 6);
-  pb_istream_read_string(&stream, entry->uuids.folder, sizeof(entry->uuids.folder), 7);
-  pb_istream_read_string(&stream, entry->uuids.parent, sizeof(entry->uuids.parent), 8);
-  pb_istream_read_varlong(&stream, &entry->timestamp, 9);
+  Protobuf_readString(&proto, entry->uuids.self, sizeof(entry->uuids.self), 2);
+  Protobuf_readUInt  (&proto, &type, 4);
+  Protobuf_readBuffer(&proto, NULL, -1, 5);
+  Protobuf_readUInt  (&proto, &subtype, 6);
+  Protobuf_readString(&proto, entry->uuids.folder, sizeof(entry->uuids.folder), 7);
+  Protobuf_readString(&proto, entry->uuids.parent, sizeof(entry->uuids.parent), 8);
+  Protobuf_readULong (&proto, &entry->timestamp, 9);
 
   if (type != 0 || subtype != 0) {
     return false;
   }
 
   unsigned char subbuffer[512] = {0};
-  int subsize = pb_istream_read_buffer(&stream, subbuffer, sizeof(subbuffer), 16);
+  Protobuf_readBuffer(&proto, subbuffer, sizeof(subbuffer), 16);
 
-  return TS3BookmarkEntry_deserialize(entry, subbuffer, subsize);
+  return TS3BookmarkEntry_deserialize(entry, subbuffer, sizeof(subbuffer));
 }
 
 static int TS3BookmarkEntry_serialize(
     struct TS3BookmarkEntry *entry,
     unsigned char *buffer, int size)
 {
-  pb_ostream_t stream = pb_ostream_from_buffer(buffer, size);
+  struct Protobuf proto = Protobuf_createNew(buffer, size);
 
-  pb_ostream_write_string(&stream, entry->bookmarkName, 1);
-  pb_ostream_write_string(&stream, entry->serverAddress, 2);
-  pb_ostream_write_varint(&stream, entry->serverPort, 3);
-  pb_ostream_write_string(&stream, entry->nickname, 4);
+  Protobuf_writeString(&proto, entry->bookmarkName, 1);
+  Protobuf_writeString(&proto, entry->serverAddress, 2);
+  Protobuf_writeUInt  (&proto, entry->serverPort, 3);
+  Protobuf_writeString(&proto, entry->nickname, 4);
 
-  pb_ostream_write_string(&stream, "", 5); // phonetic nickname
-  pb_ostream_write_string(&stream, "", 6);
+  Protobuf_writeString(&proto, "", 5); // phonetic nickname
+  Protobuf_writeString(&proto, "", 6);
 
-  pb_ostream_write_string(&stream, entry->serverPassword, 7);
+  Protobuf_writeString(&proto, entry->serverPassword, 7);
 
-  pb_ostream_write_string(&stream, "", 8); // default channel
-  pb_ostream_write_string(&stream, "", 9); // default channel password
-  pb_ostream_write_varint(&stream, 0,  10);
-  pb_ostream_write_string(&stream, "", 11);
-  pb_ostream_write_string(&stream, "", 12);
-  pb_ostream_write_string(&stream, "", 13);
-  pb_ostream_write_varint(&stream, 0,  14);
-  pb_ostream_write_string(&stream, "", 15);
-  pb_ostream_write_string(&stream, "", 17);
-  pb_ostream_write_varint(&stream, 0,  18);
-  pb_ostream_write_varint(&stream, 0,  19);
-  pb_ostream_write_varint(&stream, 0,  22);
+  Protobuf_writeString(&proto, "", 8); // default channel
+  Protobuf_writeString(&proto, "", 9); // default channel password
+  Protobuf_writeUInt  (&proto, 0,  10);
+  Protobuf_writeString(&proto, "", 11);
+  Protobuf_writeString(&proto, "", 12);
+  Protobuf_writeString(&proto, "", 13);
+  Protobuf_writeUInt  (&proto, 0,  14);
+  Protobuf_writeString(&proto, "", 15);
+  Protobuf_writeString(&proto, "", 17);
+  Protobuf_writeUInt  (&proto, 0,  18);
+  Protobuf_writeUInt  (&proto, 0,  19);
+  Protobuf_writeUInt  (&proto, 0,  22);
 
-  return stream.bytes_written;
+  return (int) proto.position;
 }
 
 int TS3Bookmarks_serialize(
     struct TS3BookmarkEntry *entry,
     unsigned char *buffer, int size)
 {
-  pb_ostream_t stream = pb_ostream_from_buffer(buffer, size);
+  struct Protobuf proto = Protobuf_createNew(buffer, size);
+
   const char *spacer = "ffffffff-ffff-ffff-ffff-ffffffffffff";
 
-  pb_ostream_write_string(&stream, entry->uuids.self, 2);
-  pb_ostream_write_varint(&stream, 0, 4);
-  pb_ostream_write_string(&stream, spacer, 5);
-  pb_ostream_write_varint(&stream, 0, 6);
-  pb_ostream_write_string(&stream, entry->uuids.folder, 7);
-  pb_ostream_write_string(&stream, entry->uuids.parent, 8);
-  pb_ostream_write_varint(&stream, entry->timestamp, 9);
+  Protobuf_writeString(&proto, entry->uuids.self, 2);
+  Protobuf_writeUInt  (&proto, 0, 4);
+  Protobuf_writeString(&proto, spacer, 5);
+  Protobuf_writeUInt  (&proto, 0, 6);
+  Protobuf_writeString(&proto, entry->uuids.folder, 7);
+  Protobuf_writeString(&proto, entry->uuids.parent, 8);
+  Protobuf_writeUInt  (&proto, entry->timestamp, 9);
 
   unsigned char subbuffer[512] = {0};
-  size_t subsize = TS3BookmarkEntry_serialize(entry, subbuffer, sizeof(subbuffer));
+  unsigned long subsize = TS3BookmarkEntry_serialize(entry, subbuffer, sizeof(subbuffer));
 
-  pb_ostream_write_buffer(&stream, subbuffer, subsize, 16);
-  return stream.bytes_written;
+  Protobuf_writeBuffer(&proto, subbuffer, subsize, 16);
+  return (int) proto.position;
 }

@@ -1,6 +1,5 @@
 
 #include "plugin.h"
-#include "server.h"
 #include "log.h"
 
 static void Logger_log(enum LogLevel severity, const char *format, va_list arguments) {
