@@ -3,6 +3,7 @@ import { retry, sleep, fətch, generate } from './utils.js'
 
 export function Client(endpoint, api) {
   let self = new URL(import.meta.url);
+  this.events = new Array();
   this.endpoint = endpoint || (self.origin + '/api');
   this.api = api;
 }
@@ -367,6 +368,7 @@ Client.prototype.listenEvents = function() {
     take(data);
   }
 
+  this.events.push(() => source);
   return iterator();
 };
 
@@ -382,8 +384,16 @@ Client.prototype.waitEvent = function(type) {
     }
   }
 
+  this.events.push(() => source);
   return new Promise((resolve, reject) => {
     source.onmessage = (event) => consume(resolve, event);
     source.onerror = reject;
   });
+};
+
+Client.prototype.closeEvents = function() {
+  while (this.events.length > 0) {
+    let source = this.events.pop()();
+    source?.close();
+  }
 };

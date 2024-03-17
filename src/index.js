@@ -117,17 +117,23 @@ function App({ client }) {
     }
   }
 
-  async function listenEvents() {
+  async function handleEvents(events) {
     const states = {
       'CONNECTION_STATE_CONNECTED': refreshBookmarksState,
       'CONNECTION_STATE_DISCONNECTED': refreshBookmarksState,
       'CLIENT_LIST_CHANGED': refreshDashboardState,
     };
 
-    const events = client.listenEvents();
     for await (let event of events) {
       states[event.type]?.();
     }
+  }
+
+  function listenEvents() {
+    const events = client.listenEvents();
+    handleEvents(events);
+
+    return () => client.closeEvents();
   }
 
   async function refreshBookmarksState() {
@@ -154,7 +160,7 @@ function App({ client }) {
     setContent('dashboard');
   }
 
-  useEffect(() => void (restoreState(), listenEvents()), []);
+  useEffect(() => (restoreState(), listenEvents()), []);
 
   return (
     $(TS3QuickAccessPanel, {
