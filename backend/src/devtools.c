@@ -25,14 +25,16 @@ bool DevTools_evaluateJSCode(
     const char *code)
 {
   char message[1024];
-  const char json[] = "{"
+  const char json[] = ""
+    "{"
       "\"id\":%d,"
       "\"method\":\"Runtime.evaluate\","
       "\"params\":{"
           "\"expression\":%m,"
           "\"userGesture\":true,"
           "\"awaitPromise\":true"
-      "}}";
+      "}"
+    "}";
 
   if (dev->conn == NULL) {
     return false;

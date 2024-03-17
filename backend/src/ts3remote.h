@@ -94,6 +94,10 @@ void TS3Remote_muteOutput(struct TS3Remote *remote, bool mute);
 void TS3Remote_setAfk(struct TS3Remote *remote, bool afk);
 void TS3Remote_shouldTalk(struct TS3Remote *remote, bool talk);
 
+void TS3Remote_setPttHotkey(struct TS3Remote *remote, int key);
+void TS3Remote_rebindPttHotkey(struct TS3Remote *remote);
+void TS3Remote_clearPttHotkey(struct TS3Remote *remote);
+
 void TS3Remote_setCursorToSelf(struct TS3Remote *remote);
 void TS3Remote_setCursorToChannel(struct TS3Remote *remote, uint64 channelId);
 void TS3Remote_updateCursor(struct TS3Remote *remote);

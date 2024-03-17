@@ -7,11 +7,12 @@ static void TS3Remote_resetCursor(struct TS3Remote *remote);
 static void TS3Remote_resetBrowser(struct TS3Remote *remote);
 
 struct TS3Remote* TS3Remote_getInstance(uint64 handle) {
-  static struct TS3Remote ts3remote = {0};
+  static struct TS3Remote ts3remote = {
+    .pttHotkey = TS3_PTT_HOTKEY_NONE,
+  };
 
   if (ts3remote.handle == 0) {
     ts3remote.handle = handle;
-    ts3remote.pttHotkey = TS3_PTT_HOTKEY_NONE;
     return &ts3remote;
   }
 
@@ -312,6 +313,21 @@ void TS3Remote_shouldTalk(struct TS3Remote *remote, bool talk) {
 
   ts3->setClientSelfVariableAsInt(remote->handle, CLIENT_INPUT_DEACTIVATED, talk ? INPUT_ACTIVE : INPUT_DEACTIVATED);
   ts3->flushClientSelfUpdates(remote->handle, NULL);
+}
+
+void TS3Remote_setPttHotkey(struct TS3Remote *remote, int key) {
+  remote->pttHotkey = key;
+  TS3Remote_shouldTalk(remote, false);
+}
+
+void TS3Remote_rebindPttHotkey(struct TS3Remote *remote) {
+  remote->pttHotkey = TS3_PTT_HOTKEY_REBIND;
+  TS3Remote_shouldTalk(remote, true);
+}
+
+void TS3Remote_clearPttHotkey(struct TS3Remote *remote) {
+  remote->pttHotkey = TS3_PTT_HOTKEY_NONE;
+  TS3Remote_shouldTalk(remote, true);
 }
 
 void TS3Remote_setCursorToSelf(struct TS3Remote *remote) {

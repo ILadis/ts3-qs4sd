@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "plugin.h"
 #include "ts3remote.h"
+#include "ts3settings.h"
 #include "paudio.h"
 #include "sdinput.h"
 
@@ -57,6 +58,9 @@ int ts3plugin_init() {
     return 1;
   }
 
+  struct TS3Remote *remote = TS3Remote_getInstance(0);
+  TS3Settings_load(remote);
+
   Executor_start(&paudio);
   Executor_start(&input);
 
@@ -67,6 +71,7 @@ void ts3plugin_shutdown() {
   mg_server_stop(&server);
 
   struct TS3Remote *remote = TS3Remote_getInstance(0);
+  TS3Settings_save(remote);
   TS3Remote_resetConnection(remote);
 
   Executor_stop(&paudio);

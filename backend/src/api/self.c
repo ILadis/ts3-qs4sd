@@ -60,15 +60,13 @@ static void mg_handler_alter_ptt_fn(
 
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/self/ptt/rebind")) {
       struct TS3Remote *remote = TS3Remote_getInstance(0);
-      remote->pttHotkey = TS3_PTT_HOTKEY_REBIND;
-      TS3Remote_shouldTalk(remote, true);
+      TS3Remote_rebindPttHotkey(remote);
       return mg_http_api_response(conn, "200 OK", NULL);
     }
 
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/self/ptt/clear")) {
       struct TS3Remote *remote = TS3Remote_getInstance(0);
-      remote->pttHotkey = TS3_PTT_HOTKEY_NONE;
-      TS3Remote_shouldTalk(remote, true);
+      TS3Remote_clearPttHotkey(remote);
       return mg_http_api_response(conn, "200 OK", NULL);
     }
   }
