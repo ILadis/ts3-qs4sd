@@ -12,7 +12,7 @@
 #define HTTP_JSON_CHANNEL   "\"channel_id\":%lu,\"channel_name\":%m,\"channel_order\":%lu,\"channel_max_clients\":%lu,\"channel_has_password\":%s"
 
 // paudio json objects
-#define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%m"
+#define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%s"
 
 // common json objects
 #define HTTP_JSON_EVENT "\"type\":%m"

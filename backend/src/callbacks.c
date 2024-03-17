@@ -245,7 +245,7 @@ void sdinput_onUpdate(struct SDInput *input) {
     }
 
     if (SDInput_isKeyHeld(input, key) && rebind) {
-      remote->pttHotkey = (int) key;
+      TS3Remote_setPttHotkey(remote, (int) key);
       rebind = false;
     }
   }
