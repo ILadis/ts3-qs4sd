@@ -11,14 +11,13 @@ const repoName = 'ILadis/ts3-qs4sd';
 const releaseInfo = {
   'name': 'Latest Devbuild',
   'body': ''
-    + 'This is the latest automatically built version of the plugin. It can manually installed by selecting the "Install Plugin"\n'
-    + 'from ZIP File" option in the DeckyLoader developer settings menu.\n'
+    + 'This is the latest automatically built version of the plugin. It can be manually installed by selecting "Install Plugin \n'
+    + 'from ZIP File" in the DeckyLoader developer settings menu.\n'
     + '\n'
-    + 'Note: This version may be unstable since it may contain work in progress.',
+    + 'Note: This version should be considered unstable since it may contain work in progress.'
   'tag_name': 'latest',
   'target_commitish': 'master',
   'prerelease': true,
-  'draft': false,
 };
 
 const releases = await client.request({
