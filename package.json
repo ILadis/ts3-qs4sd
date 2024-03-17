@@ -1,6 +1,6 @@
 {
   "name": "ts3-qs4sd",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick access menu.",
   "type": "module",
   "scripts": {
