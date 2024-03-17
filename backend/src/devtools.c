@@ -64,9 +64,9 @@ static bool DevTools_nextPageItem(struct mg_str json, size_t *offset, struct Dev
 
 static void DevTools_fetchDebuggerWsUrlFn(
     struct mg_connection *conn,
-    int event, void *data, void *context)
+    int event, void *data)
 {
-  struct DevTools *dev = (struct DevTools *) context;
+  struct DevTools *dev = (struct DevTools *) conn->fn_data;
 
   if (event == MG_EV_CONNECT) {
     struct mg_str host = mg_url_host(dev->url);
@@ -130,9 +130,9 @@ static void DevTools_printLogMessage(struct mg_ws_message *msg) {
 
 static void DevTools_listenDebuggerWsUrlFn(
     struct mg_connection *conn,
-    int event, void *data, void *context)
+    int event, void *data)
 {
-  struct DevTools *dev = (struct DevTools *) context;
+  struct DevTools *dev = (struct DevTools *) conn->fn_data;
 
   if (event == MG_EV_WS_OPEN) {
     const char enableLog[] = "{\"id\":1, \"method\":\"Log.enable\"}";

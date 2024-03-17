@@ -5,7 +5,7 @@
 #include "devtools.h"
 #include "log.h"
 
-static void mg_server_handler(struct mg_connection *conn, int event, void *data,void *context);
+static void mg_server_handler(struct mg_connection *conn, int event, void *data);
 static void* mg_server_thread(void *context);
 static void mg_server_set_log(int severity);
 
@@ -53,9 +53,9 @@ void mg_server_add_handler(
 
 static void mg_server_handler(
     struct mg_connection *conn,
-    int event, void *data, void *context)
+    int event, void *data)
 {
-  struct mg_server *server = context;
+  struct mg_server *server = conn->fn_data;
   struct mg_handler *handler = server->handler;
 
   if (event == MG_EV_HTTP_MSG) {

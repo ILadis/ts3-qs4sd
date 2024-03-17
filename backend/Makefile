@@ -24,8 +24,8 @@ install:
 vendor:
 	@mkdir -p vnd/teamspeak/teamlog
 	@curl https://github.com/wheybags/glibc_version_header/raw/master/version_headers/x64/force_link_glibc_2.27.h -Lso vnd/glibc_2.27.h
-	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.c -Lso vnd/mongoose.c
-	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.h -Lso vnd/mongoose.h
+	@curl https://github.com/cesanta/mongoose/raw/7.13/mongoose.c -Lso vnd/mongoose.c
+	@curl https://github.com/cesanta/mongoose/raw/7.13/mongoose.h -Lso vnd/mongoose.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/plugin_definitions.h -Lso vnd/plugin_definitions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/ts3_functions.h -Lso vnd/ts3_functions.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/teamlog/logtypes.h -Lso vnd/teamspeak/teamlog/logtypes.h
