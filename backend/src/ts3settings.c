@@ -37,13 +37,16 @@ void TS3Settings_load(struct TS3Remote *remote) {
     return;
   }
 
+  int id = 0;
   enum SDInputKey key;
-  for (int id = 0; SDInputKey_byId(&key, id); id++) {
+  while (SDInputKey_byId(&key, id)) {
     const char *name = SDInputKey_getName(key);
     if (strncmp(settings.pttHotkey, name, sizeof(settings.pttHotkey)) == 0) {
+      Logger_debugLog("Restored PTT hotkey from settings: %ld", key);
       TS3Remote_setPttHotkey(remote, id);
       break;
     }
+    else id++;
   }
 }
 
@@ -68,7 +71,7 @@ bool TS3Settings_readFrom(struct TS3Settings *settings, const char *path) {
   }
 
   char buffer[1024] = {0};
-  int size = fread(buffer, sizeof(buffer), 1, file);
+  int size = fread(buffer, sizeof(char), length(buffer), file);
   Logger_debugLog("Read settings: %s", buffer);
 
   struct mg_str json = mg_str_n(buffer, size);
@@ -92,7 +95,7 @@ bool TS3Settings_writeTo(struct TS3Settings *settings, const char *path) {
     "}";
 
   size_t size = mg_snprintf(buffer, sizeof(buffer), json, mg_json_string(settings->pttHotkey));
-  fwrite(buffer, size, 1, file);
+  fwrite(buffer, sizeof(char), size, file);
   Logger_debugLog("Wrote settings: %s", buffer);
 
   fclose(file);

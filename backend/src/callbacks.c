@@ -94,6 +94,7 @@ void ts3plugin_onConnectStatusChangeEvent(
     switch (newStatus) {
     case STATUS_DISCONNECTED:
       TS3Remote_resetConnection(remote);
+      TS3Settings_save(remote);
       mg_server_user_event(&server, CONNECTION_STATE_DISCONNECTED, NULL);
       break;
 
