@@ -21,7 +21,7 @@ static void mg_handler_get_audio_outputs_fn(
       int i = 0;
       while (PAudio_nextOutput(paudio, &output)) {
         mg_http_printf_json_chunk(conn, i++ ? ", %s" : "%s", "{" HTTP_JSON_AUDIO_OUTPUT "}",
-          output->index, output->name, output->volume, output->muted);
+            mg_json_number(output->index), mg_json_string(output->name), mg_json_number(output->volume), mg_json_bool(output->muted));
       }
 
       mg_http_printf_chunk(conn, "]");
@@ -45,12 +45,12 @@ static void mg_handler_set_audio_output_volume_fn(
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/audio/outputs/volume")) {
       int index = 0;
 
-      if (!mg_http_get_json_integer(msg, "$.index", &index) || index < 0) {
+      if (!mg_json_get_integer(msg->body, "$.index", &index) || index < 0) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 
       double volume = 0.0;
-      if (!mg_http_get_json_double(msg, "$.volume", &volume) || volume < 0) {
+      if (!mg_json_get_double(msg->body, "$.volume", &volume) || volume < 0) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 

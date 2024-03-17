@@ -1,7 +1,6 @@
 #ifndef DEVTOOLS_H
 #define DEVTOOLS_H
 
-#include "../vnd/mjson.h"
 #include "../vnd/mongoose.h"
 
 struct DevTools {

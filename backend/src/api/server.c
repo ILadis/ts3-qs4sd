@@ -22,10 +22,12 @@ static void mg_handler_get_server_fn(
       }
 
       mg_http_api_response(conn, "200 OK", "application/json");
-      mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_SERVER ",\"bookmarks\":[", server->name, server->status);
+      mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_SERVER ",\"bookmarks\":[",
+          mg_json_string(server->name), mg_json_number(server->status));
   
       for (int i = 0; i < server->numBookmarks; i++) {
-        mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_BOOKMARK "}", bookmarks[i].name, bookmarks[i].uuid);
+        mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_BOOKMARK "}",
+            mg_json_string(bookmarks[i].name), mg_json_string(bookmarks[i].uuid));
       }
 
       mg_http_printf_chunk(conn, "]}");
@@ -49,7 +51,7 @@ static void mg_handler_connect_server_fn(
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/server/connect")) {
       char uuid[40];
 
-      if (!mg_http_get_json_string(msg, "$.uuid", uuid, sizeof(uuid))) {
+      if (!mg_json_get_string(msg->body, "$.uuid", uuid, sizeof(uuid))) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 

@@ -23,11 +23,13 @@ static void mg_handler_get_cursor_fn(
 
       mg_http_api_response(conn, "200 OK", "application/json");
       mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CHANNEL ",\"clients\":[",
-        channel->id, channel->name, channel->order, channel->maxClients, channel->hasPassword);
+          mg_json_number(channel->id), mg_json_string(channel->name), mg_json_number(channel->order),
+          mg_json_number(channel->maxClients), mg_json_bool(channel->hasPassword));
 
       for (int i = 0; i < cursor->numClients; i++) {
         mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CLIENT "}",
-          clients[i].id, clients[i].nickname, clients[i].inputMuted, clients[i].outputMuted);
+            mg_json_number(clients[i].id), mg_json_string(clients[i].nickname),
+            mg_json_bool(clients[i].inputMuted), mg_json_bool(clients[i].outputMuted));
       }
 
       mg_http_printf_chunk(conn, "]}");
@@ -51,7 +53,7 @@ static void mg_handler_move_cursor_fn(
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/cursor/move")) {
       int channelId = 0;
 
-      if (!mg_http_get_json_integer(msg, "$.channel_id", &channelId) || channelId < 0) {
+      if (!mg_json_get_integer(msg->body, "$.channel_id", &channelId) || channelId < 0) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 
@@ -79,7 +81,7 @@ static void mg_handler_join_cursor_fn(
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/cursor/join")) {
       char password[256];
 
-      if (!mg_http_get_json_string(msg, "$.password", password, sizeof(password))) {
+      if (!mg_json_get_string(msg->body, "$.password", password, sizeof(password))) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 

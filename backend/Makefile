@@ -1,7 +1,7 @@
 
 # source and target files
 CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c)
-CFILES   += vnd/mongoose.c vnd/mjson.c
+CFILES   += vnd/mongoose.c
 
 CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
 CFLAGS   += `pkg-config --cflags --libs libpulse sqlite3 uuid`
@@ -24,8 +24,6 @@ install:
 vendor:
 	@mkdir -p vnd/teamspeak/teamlog
 	@curl https://github.com/wheybags/glibc_version_header/raw/master/version_headers/x64/force_link_glibc_2.27.h -Lso vnd/glibc_2.27.h
-	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.c -Lso vnd/mjson.c
-	@curl https://github.com/cesanta/mjson/raw/1.2.7/src/mjson.h -Lso vnd/mjson.h
 	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.c -Lso vnd/mongoose.c
 	@curl https://github.com/cesanta/mongoose/raw/7.12/mongoose.h -Lso vnd/mongoose.h
 	@curl https://github.com/TeamSpeak-Systems/ts3client-pluginsdk/raw/master/include/plugin_definitions.h -Lso vnd/plugin_definitions.h

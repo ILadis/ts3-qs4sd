@@ -23,11 +23,13 @@ static void mg_handler_get_browser_fn(
 
       mg_http_api_response(conn, "200 OK", "application/json");
       mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CHANNEL ",\"sub_channels\":[",
-        channel->id, channel->name, channel->order, channel->maxClients, channel->hasPassword);
+          mg_json_number(channel->id), mg_json_string(channel->name), mg_json_number(channel->order),
+          mg_json_number(channel->maxClients), mg_json_bool(channel->hasPassword));
 
       for (int i = 0; i < browser->numChilds; i++) {
         mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CHANNEL "}",
-          childs[i].id, childs[i].name, childs[i].order, childs[i].maxClients, childs[i].hasPassword);
+            mg_json_number(childs[i].id), mg_json_string(childs[i].name), mg_json_number(childs[i].order),
+            mg_json_number(childs[i].maxClients), mg_json_bool(childs[i].hasPassword));
       }
 
       mg_http_printf_chunk(conn, "]}");
@@ -51,7 +53,7 @@ static void mg_handler_move_browser_fn(
     if (mg_http_reqmatch(msg, HTTP_METHOD_POST, "/api/browser/move")) {
       int channelId = 0;
 
-      if (!mg_http_get_json_integer(msg, "$.channel_id", &channelId) || channelId < -1) {
+      if (!mg_json_get_integer(msg->body, "$.channel_id", &channelId) || channelId < -1) {
         return mg_http_api_response(conn, "400 Bad Request", NULL);
       }
 

@@ -1,6 +1,7 @@
 
 
 #include "devtools.h"
+#include "plugin.h"
 #include "server.h"
 #include "log.h"
 
@@ -28,7 +29,7 @@ bool DevTools_evaluateJSCode(
       "\"id\":%d,"
       "\"method\":\"Runtime.evaluate\","
       "\"params\":{"
-          "\"expression\":%Q,"
+          "\"expression\":%m,"
           "\"userGesture\":true,"
           "\"awaitPromise\":true"
       "}}";
@@ -37,7 +38,7 @@ bool DevTools_evaluateJSCode(
     return false;
   }
 
-  int length = mjson_snprintf(message, sizeof(message), json, 1, code);
+  size_t length = mg_snprintf(message, sizeof(message), json, mg_json_number(1), mg_json_string(code));
   mg_ws_send(dev->conn, message, length, WEBSOCKET_OP_TEXT);
 
   return true;
@@ -46,71 +47,19 @@ bool DevTools_evaluateJSCode(
 struct DevToolsPageItem {
   char title[100];
   char debuggerWsUrl[250];
-  struct {
-    const char *key;
-    int length, offset;
-    int depth;
-  } context;
 };
 
-static bool DevToolsPageItem_contextHasKey(struct DevToolsPageItem *item, char *key) {
-  return strncmp(key, item->context.key, item->context.length) == 0;
-}
+static bool DevTools_nextPageItem(struct mg_str json, size_t *offset, struct DevToolsPageItem *item) {
+  struct mg_str value;
+  size_t next = *offset = mg_json_next(json, *offset, NULL, &value);
 
-static int DevTools_nextPageItem(
-    int event, const char *json,
-    int offset, int length, void *data)
-{
-  struct DevToolsPageItem *item = (struct DevToolsPageItem *) data;
-  const char *value = json + offset + 1; length -= 2;
-
-  switch (event) {
-  case MJSON_TOK_KEY:
-    item->context.key = value;
-    item->context.length = length;
-    break;
-  case MJSON_TOK_OBJECT:
-  case MJSON_TOK_ARRAY:
-    item->context.depth++;
-    break;
-  case MJSON_TOK_STRING:
-    char *target = NULL;
-    int size = 0;
-
-    if (DevToolsPageItem_contextHasKey(item, "title")) {
-      target = item->title;
-      size = sizeof(item->title);
-    }
-    else if (DevToolsPageItem_contextHasKey(item, "webSocketDebuggerUrl")) {
-      target = item->debuggerWsUrl;
-      size = sizeof(item->debuggerWsUrl);
-    }
-    else return 0;
-
-    snprintf(target, size, "%.*s", length, value);
-    break;
-  case MJSON_TOK_OBJECT + 2:
-  case MJSON_TOK_ARRAY + 2:
-    int depth = --item->context.depth;
-
-    /* Return current item when:
-     * - leaving current object and
-     * - offset is larger than last time
-     */
-    if (offset > item->context.offset) {
-      item->context.offset = offset;
-      item->context.depth = 0;
-
-      // reached end of json document
-      if (depth == 0) {
-        return 0;
-      }
-
-      return 1;
-    }
+  if (next > 0) {
+    mg_json_get_string(value, "$.title", item->title, sizeof(item->title));
+    mg_json_get_string(value, "$.webSocketDebuggerUrl", item->debuggerWsUrl, sizeof(item->debuggerWsUrl));
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 static void DevTools_fetchDebuggerWsUrlFn(
@@ -135,7 +84,8 @@ static void DevTools_fetchDebuggerWsUrlFn(
     struct mg_http_message *msg = (struct mg_http_message *) data;
     struct DevToolsPageItem item = {0};
 
-    while (mjson(msg->body.ptr, msg->body.len, DevTools_nextPageItem, &item) > 0) {
+    size_t offset = 0;
+    while (DevTools_nextPageItem(msg->body, &offset, &item)) {
       if (strncmp(dev->tab, item.title, sizeof(dev->tab)) == 0) {
         snprintf(dev->debuggerWsUrl, sizeof(dev->debuggerWsUrl), "%s", item.debuggerWsUrl);
         break;
@@ -144,12 +94,12 @@ static void DevTools_fetchDebuggerWsUrlFn(
 
     conn->is_closing = 1;
 
-    const int result = strnlen(dev->debuggerWsUrl, sizeof(dev->debuggerWsUrl));
-    if (result <= 0) {
+    bool result = dev->debuggerWsUrl[0] != '\0';
+    if (result) {
+      return DevTools_listenDebuggerWsUrl(dev);
+    } else {
       Logger_errorLog("Could not find tab with name '%s' on: %s", dev->tab, dev->url);
       return DevTools_retryFetchDebuggerWsUrl(dev);
-    } else {
-      return DevTools_listenDebuggerWsUrl(dev);
     }
   }
 }
@@ -160,20 +110,18 @@ static void DevTools_fetchDebuggerWsUrl(struct DevTools *dev) {
 }
 
 static void DevTools_printLogMessage(struct mg_ws_message *msg) {
-  const char *methods[] = {
-    "Log.entryAdded",
-    "Runtime.consoleAPICalled",
-    "Runtime.exceptionThrown",
-    NULL,
+  const struct mg_str methods[] = {
+    mg_str("\"Log.entryAdded\""),
+    mg_str("\"Runtime.consoleAPICalled\""),
+    mg_str("\"Runtime.exceptionThrown\""),
   };
 
-  char method[64];
-  if (mg_ws_get_json_string(msg, "$.method", method, sizeof(method))) {
-    for (int i = 0; methods[i]; i++) {
-      if (strcmp(methods[i], method) == 0) {
-        const char *params; int len;
-        if (mjson_find(msg->data.ptr, msg->data.len, "$.params", &params, &len)) {
-          Logger_debugLog("DevTools (%s): %.*s", methods[i], len, params);
+  struct mg_str method, params;
+  if (mg_json_find(msg->data, "$.method", &method)) {
+    for (int i = 0; i < length(methods); i++) {
+      if (mg_strcmp(methods[i], method) == 0) {
+        if (mg_json_find(msg->data, "$.params", &params)) {
+          Logger_debugLog("DevTools (%.*s): %.*s", method.len, method.ptr, params.len, params.ptr);
         }
       }
     }

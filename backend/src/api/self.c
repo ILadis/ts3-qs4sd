@@ -39,7 +39,8 @@ static void mg_handler_get_self_fn(
 
       mg_http_api_response(conn, "200 OK", "application/json");
       mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CLIENT "," HTTP_JSON_PTT_STATE "}",
-          client->id, client->nickname, client->inputMuted, client->outputMuted, pttState, pttHotkeyName);
+          mg_json_number(client->id), mg_json_string(client->nickname), mg_json_bool(client->inputMuted),
+          mg_json_bool(client->outputMuted), mg_json_string(pttState), mg_json_string(pttHotkeyName));
       mg_http_printf_chunk(conn, "");
     }
   }
@@ -85,7 +86,7 @@ static inline void mg_handle_mute_self_request(
 {
   char device[10];
 
-  if (!mg_http_get_json_string(msg, "$.device", device, sizeof(device))) {
+  if (!mg_json_get_string(msg->body, "$.device", device, sizeof(device))) {
     return mg_http_api_response(conn, "400 Bad Request", NULL);
   }
 

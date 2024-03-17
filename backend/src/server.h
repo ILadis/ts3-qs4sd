@@ -6,7 +6,6 @@
 #include <pthread.h>
 
 #include "../vnd/mongoose.h"
-#include "../vnd/mjson.h"
 
 struct mg_server {
   volatile bool running;
@@ -72,64 +71,23 @@ static inline int mg_http_reqmatchfmt(
   return result;
 }
 
+#define mg_json_number(val) val
+#define mg_json_string(val) mg_print_esc, 0, val
+#define mg_json_bool(val)   val ? "true" : "false"
+
 static inline void mg_http_printf_json_chunk(
     struct mg_connection *conn,
     const char *fmt,
     const char *json, ...)
 {
   static char buf[1024];
-  struct mjson_fixedbuf fb = { buf, sizeof(buf), 0 };
 
   va_list arguments;
   va_start(arguments, json);
-  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &arguments);
+  mg_vsnprintf(buf, sizeof(buf), json, &arguments);
   va_end(arguments);
 
   mg_http_printf_chunk(conn, fmt, buf);
-}
-
-static inline bool mg_http_get_json_string(
-    struct mg_http_message *msg,
-    const char *path,
-    char *value, int len)
-{
-  return mjson_get_string(msg->body.ptr, msg->body.len, path, value, len) != -1;
-}
-
-static inline bool mg_ws_get_json_string(
-    struct mg_ws_message *ws,
-    const char *path,
-    char *value, int len)
-{
-  return mjson_get_string(ws->data.ptr, ws->data.len, path, value, len) != -1;
-}
-
-static inline bool mg_http_get_json_integer(
-    struct mg_http_message *msg,
-    const char *path,
-    int *value)
-{
-  double target;
-  if (mjson_get_number(msg->body.ptr, msg->body.len, path, &target) != 0) {
-    *value = (int) target;
-    return true;
-  }
-
-  return false;
-}
-
-static inline bool mg_http_get_json_double(
-    struct mg_http_message *msg,
-    const char *path,
-    double *value)
-{
-  double target;
-  if (mjson_get_number(msg->body.ptr, msg->body.len, path, &target) != 0) {
-    *value = target;
-    return true;
-  }
-
-  return false;
 }
 
 static inline void mg_http_printf_sse_json_chunk(
@@ -137,14 +95,87 @@ static inline void mg_http_printf_sse_json_chunk(
     const char *json, ...)
 {
   static char buf[250];
-  struct mjson_fixedbuf fb = { buf, sizeof(buf), 0 };
 
   va_list arguments;
   va_start(arguments, json);
-  mjson_vprintf(mjson_print_fixed_buf, &fb, json, &arguments);
+  mg_vsnprintf(buf, sizeof(buf), json, &arguments);
   va_end(arguments);
 
   mg_http_printf_chunk(conn, "data: %s\r\n\r\n", buf);
+}
+
+static inline bool mg_json_find(
+    struct mg_str json,
+    const char *path,
+    struct mg_str *value)
+{
+  int len, offset = mg_json_get(json, path, &len);
+  if (offset < 0) {
+    return false;
+  }
+
+  value->ptr = &json.ptr[offset];
+  value->len = len;
+  return true;
+}
+
+static inline bool mg_json_get_string(
+    struct mg_str json,
+    const char *path,
+    char *value, int len)
+{
+  int size, offset = mg_json_get(json, path, &size);
+  if (offset < 0) {
+    return false;
+  }
+
+  // check if this is actually a json string value
+  if (json.ptr[offset] != '"' || json.ptr[offset + size - 1] != '"') {
+    return false;
+  }
+
+  offset += 1;
+  size -= 2;
+
+  // need one extra byte for '\0'
+  if (size + 1 > len) {
+    return false;
+  }
+
+  for (int i = 0; i < size; i++) {
+    value[i] = json.ptr[offset + i];
+  }
+
+  value[size] = '\0';
+  return true;
+}
+
+static inline bool mg_json_get_integer(
+    struct mg_str json,
+    const char *path,
+    int *value)
+{
+  double target;
+  if (mg_json_get_num(json, path, &target) != 0) {
+    *value = (int) target;
+    return true;
+  }
+
+  return false;
+}
+
+static inline bool mg_json_get_double(
+    struct mg_str json,
+    const char *path,
+    double *value)
+{
+  double target;
+  if (mg_json_get_num(json, path, &target) != 0) {
+    *value = target;
+    return true;
+  }
+
+  return false;
 }
 
 #endif

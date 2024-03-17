@@ -22,13 +22,12 @@ A TeamSpeak 3 client and [DeckyLoader](https://github.com/SteamDeckHomebrew/Plug
 ### Backend
 
 The following dependencies are required to build the TeamSpeak 3 client plugin:
-1. [mjson](https://github.com/cesanta/mjson): for JSON parsing
 1. [mongoose](https://github.com/cesanta/mongoose): for HTTP server/client and web sockets
 1. [ts3client-pluginsdk](https://github.com/TeamSpeak-Systems/ts3client-pluginsdk): the TeamSpeak 3 plugin SDK
 1. libpulse: to control audio volumes of applications
 1. libsqlite3: to inject bookmarks into TeamSpeak 3 settings.db
 
-To download dependencies 1-3 run `make vendor` (this requires `curl`). All other dependencies need to be installed manually. Then run `make` to build the plugin.
+To download dependencies 1-2 run `make vendor` (this requires `curl`). All other dependencies need to be installed manually. Then run `make` to build the plugin.
 
 Change the working directory to `backend/` before issuing any `make` commands.
 

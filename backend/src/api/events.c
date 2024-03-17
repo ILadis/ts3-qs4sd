@@ -46,7 +46,7 @@ static void mg_handler_events_fn(
     }
 
     if (type != NULL) {
-      return mg_http_printf_sse_json_chunk(conn, "{" HTTP_JSON_EVENT "}", type);
+      return mg_http_printf_sse_json_chunk(conn, "{" HTTP_JSON_EVENT "}", mg_json_string(type));
     }
   }
 }

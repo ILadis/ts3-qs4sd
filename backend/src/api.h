@@ -5,17 +5,17 @@
 #include "settings.h"
 
 // ts3 json objects
-#define HTTP_JSON_SERVER    "\"name\":%Q,\"status\":%d"
-#define HTTP_JSON_BOOKMARK  "\"name\":%Q,\"uuid\":%Q"
-#define HTTP_JSON_CLIENT    "\"client_id\":%lu,\"client_nickname\":%Q,\"input_muted\":%B,\"output_muted\":%B"
-#define HTTP_JSON_PTT_STATE "\"ptt_state\":%Q,\"ptt_hotkey\":%Q"
-#define HTTP_JSON_CHANNEL   "\"channel_id\":%lu,\"channel_name\":%Q,\"channel_order\":%lu,\"channel_max_clients\":%lu,\"channel_has_password\":%B"
+#define HTTP_JSON_SERVER    "\"name\":%m,\"status\":%d"
+#define HTTP_JSON_BOOKMARK  "\"name\":%m,\"uuid\":%m"
+#define HTTP_JSON_CLIENT    "\"client_id\":%lu,\"client_nickname\":%m,\"input_muted\":%s,\"output_muted\":%s"
+#define HTTP_JSON_PTT_STATE "\"ptt_state\":%m,\"ptt_hotkey\":%m"
+#define HTTP_JSON_CHANNEL   "\"channel_id\":%lu,\"channel_name\":%m,\"channel_order\":%lu,\"channel_max_clients\":%lu,\"channel_has_password\":%s"
 
 // paudio json objects
-#define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%Q,\"volume\":%g,\"muted\":%B"
+#define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%m"
 
 // common json objects
-#define HTTP_JSON_EVENT "\"type\":%Q"
+#define HTTP_JSON_EVENT "\"type\":%m"
 
 #define USER_EVENT 100
 
