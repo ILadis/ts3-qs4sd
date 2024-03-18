@@ -7,15 +7,12 @@ A TeamSpeak 3 client and [DeckyLoader](https://github.com/SteamDeckHomebrew/Plug
 
 - Connect to bookmarked servers.
 - See connected clients and join their channels.
+- Browse and join available channels on the server.
 - See client avatars and their current status.
 - Mute/Unmute microphone and speakers.
 - Control audio volumes of running applications.
+- Push-to-Talk via shoulder buttons (L/R 4-5).
 - Disconnect from current server.
-- Push-to-Talk via shoulder buttons (bound to L5).
-
-**Missing/Planned features**:  
-- Make Push-to-Talk button configurable.
-- Option to stop TeamSpeak client when exiting the plugin.
 
 ## Building
 
@@ -33,7 +30,7 @@ Change the working directory to `backend/` before issuing any `make` commands.
 
 ### Frontend
 
-The following tools are required to build the DeckyLoader frontend:
+The following tools are required to build the DeckyLoader plugin:
 1. [Node.js](https://nodejs.org): JavaScript runtime required for building
 1. [pnpm](https://pnpm.io): package manager for JavaScript/Node.js
 
@@ -52,7 +49,8 @@ Follow these steps in order to install and setup the plugin on your Steam Deck:
 1. Install DeckyLoader on your SteamDeck as described [here](https://github.com/SteamDeckHomebrew/PluginLoader).
 1. Switch to desktop mode, download TeamSpeak 3 from the Discover store and launch it.
 1. Add all TeamSpeak servers you want to connect to as bookmarks (Bookmarks ⇾ Manage Bookmarks).
-1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs: `flatpak override --user com.teamspeak.TeamSpeak3 --device=all`
+1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs:  
+   `flatpak override --user com.teamspeak.TeamSpeak3 --device=all`
 1. Switch back to gaming mode and install TS3 QuickAccess from the DeckyLoader store.
 
 To install the plugin manually follow steps 1-4 from above and then:
