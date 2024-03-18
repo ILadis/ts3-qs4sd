@@ -14,7 +14,7 @@ const releaseInfo = {
     + 'This is the latest automatically built version of the plugin. It can be manually installed by selecting "Install Plugin \n'
     + 'from ZIP File" in the DeckyLoader developer settings menu.\n'
     + '\n'
-    + 'Note: This version should be considered unstable since it may contain work in progress.'
+    + 'Note: This version should be considered unstable since it may contain work in progress.',
   'tag_name': 'latest',
   'target_commitish': 'master',
   'prerelease': true,
