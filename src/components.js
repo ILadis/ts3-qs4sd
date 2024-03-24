@@ -70,14 +70,16 @@ export function TS3Dashboard(props) {
   const {
     server,
     channels,
+    isSelfInChannel,
     joinChannel,
+    setContent,
   } = props;
 
   return (
     $(PanelSection, { title: server.name },
       $(TS3DashboardActions, props),
       $(Focusable, null, channels.map(channel =>
-        $(PanelSectionRow, null, $(TS3ClientList, { channel, joinChannel })))
+        $(PanelSectionRow, null, $(TS3ClientList, { channel, isSelfInChannel, joinChannel, setContent })))
       )
     )
   );
@@ -121,11 +123,17 @@ export function TS3DashboardActions(props) {
 export function TS3ClientList(props) {
   const {
     channel,
+    isSelfInChannel,
     joinChannel,
+    setContent,
   } = props;
 
+  const joinAction = (channel) => isSelfInChannel(channel)
+    ? setContent('browser')
+    : joinChannel(channel);
+
   return (
-    $(Field, { childrenLayout: 'below', onClick: () => joinChannel(channel) },
+    $(Field, { childrenLayout: 'below', onClick: () => joinAction(channel) },
       $(Focusable, null, $('h3', { className: 'channel-headline' },
         $('span', { className: 'channel-count' }, channel.clients.length), channel.name
       )),
@@ -137,8 +145,14 @@ export function TS3ClientList(props) {
 }
 
 export function TS3ClientItem({ client }) {
+  const fieldProps = {
+    className: 'client-item-field',
+    childrenContainerWidth: 'max',
+    bottomSeparator: 'none',
+  };
+
   return (
-    $(Field, { label: $(TS3ClientAvatar, { client, key: client.id }), className: 'client-item-field', childrenContainerWidth: 'max', bottomSeparator: 'none' },
+    $(Field, { label: $(TS3ClientAvatar, { client, key: client.id }), ...fieldProps},
       $('span', { className: 'client-item nickname' }, client.nickname),
       $('span', { className: 'client-item status' }, 'Online'),
     )
@@ -162,22 +176,27 @@ export function TS3ChannelBrowser(props) {
   const {
     browser,
     browseChannels,
-    browseOnRoot,
+    isBrowserOnRoot,
     browseParentChannels,
+    isSelfInChannel,
     joinChannel,
     setContent,
   } = props;
 
-  const onCancel = browseOnRoot()
-    ? () => setContent('dashboard')
-    : () => browseParentChannels();
+  const cancelAction = () => isBrowserOnRoot()
+    ? setContent('dashboard')
+    : browseParentChannels();
+
+  const joinAction = (channel) => isSelfInChannel(channel)
+    ? setContent('dashboard')
+    : joinChannel(channel);
 
   return (
     $(PanelSection, { title: 'CHANNEL BROWSER' }, browser.map((channel, index) =>
-      $(Focusable, { onCancel },
+      $(Focusable, { onCancel: () => cancelAction() },
         $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
           ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), icon: $(TS3ExpandMoreIcon) })
-          : $(TS3ChannelField, { index, channel, onSubmit: () => joinChannel(channel) })
+          : $(TS3ChannelField, { index, channel, onSubmit: () => joinAction(channel) })
         )
       )
     ))
@@ -198,7 +217,7 @@ function TS3ChannelField(props) {
       icon, label: channel.name,
       focusable: true, highlightOnFocus: true,
       autoFocus: index === 0,
-      onOKButton: onSubmit,
+      onClick: onSubmit,
       onCancelButton: onCancel,
     })
   );

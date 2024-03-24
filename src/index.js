@@ -20,6 +20,23 @@ function App({ client }) {
     client.connect(bookmark.uuid);
   }
 
+  function isSelfInChannel(channel) {
+    const byId = ({ id }) => channel.id === id;
+    channel = channels.find(byId);
+
+    if (!channel) {
+      return false;
+    }
+
+    for (let client of channel.clients) {
+      if (client.id === self.id) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   async function joinChannel(channel) {
     if (channel.hasPassword) {
       var password = await TS3ChannelPasswordPrompt.show();
@@ -42,12 +59,12 @@ function App({ client }) {
     }
   }
 
-  function browseOnRoot() {
+  function isBrowserOnRoot() {
     return parent.length <= 1;
   }
 
   function browseParentChannels() {
-    if (!browseOnRoot()) {
+    if (!isBrowserOnRoot()) {
       const [_, channel] = parent.splice(0, 2);
       browseChannels(channel);
     }
@@ -175,10 +192,11 @@ function App({ client }) {
       // actions
       setContent,
       connectTo,
+      isSelfInChannel,
       joinChannel,
       disconnect,
       browseChannels,
-      browseOnRoot,
+      isBrowserOnRoot,
       browseParentChannels,
       rebindPttHotkey,
       clearPttHotkey,
