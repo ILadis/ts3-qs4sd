@@ -91,6 +91,13 @@ class NativeTeamSpeak(TeamSpeak):
     self.version = '3.6.2'
     self.installdir = '/opt/teamspeak3'
     self.executable = 'ts3client_linux_amd64'
+    self.environ = dict(os.environ) | {
+      'DISPLAY': ':0',
+      'PULSE_SERVER': f'unix:/run/user/{os.getuid()}/pulse/native',
+      'PULSE_CLIENTCONFIG': f'/run/user/{os.getuid()}/pulse/config',
+      'QT_PLUGIN_PATH': '.',
+      'LD_LIBRARY_PATH': '.',
+    }
 
   def configdir(self):
     homedir = decky_plugin.DECKY_USER_HOME
@@ -112,17 +119,8 @@ class NativeTeamSpeak(TeamSpeak):
     args = ['-platform', 'xcb']
     executable = f'{self.installdir}/{self.executable}'
 
-    uid = os.getuid()
-
-    env = dict(os.environ)
-    env['DISPLAY'] = ':0'
-    env['PULSE_SERVER'] = f'unix:/run/user/{uid}/pulse/native'
-    env['PULSE_CLIENTCONFIG'] = f'/run/user/{uid}/pulse/config'
-    env['QT_PLUGIN_PATH'] = '.'
-    env['LD_LIBRARY_PATH'] = '.'
-
     try:
-      self.process = subprocess.Popen(args, executable=executable, env=env, cwd=self.installdir)
+      self.process = subprocess.Popen(args, executable=executable, env=self.environ, cwd=self.installdir)
       self.process.poll()
     except:
       pass
@@ -169,6 +167,21 @@ class NativeTeamSpeak(TeamSpeak):
       return False
 
 class FlatpakTeamSpeak(TeamSpeak):
+  def __init__(self):
+    self.environ = dict(os.environ) | {
+      'DISPLAY': ':0',
+      'PULSE_SERVER': f'unix:/run/user/{os.getuid()}/pulse/native',
+      'PULSE_CLIENTCONFIG': f'/run/user/{os.getuid()}/pulse/config',
+    }
+    # Decky Loader uses a utility called `pyinstaller` to bundle their application into
+    # a single executable. When such an application is started a temporary directory is
+    # chosen where all required runtime dependencies are extracted. Then LD_LIBRARY_PATH
+    # is set to point to this directory. Those runtime dependencies might not be compatible
+    # with other programs installed on the system (for example flatpak).
+    #
+    # Unsetting LD_LIBRARY_PATH ensures that flatpak is using the system libraries again.
+    self.environ.pop('LD_LIBRARY_PATH')
+
   def configdir(self):
     homedir = decky_plugin.DECKY_USER_HOME
     appsdir = '.var/app/com.teamspeak.TeamSpeak3'
@@ -176,7 +189,7 @@ class FlatpakTeamSpeak(TeamSpeak):
 
   def is_running(self):
     try:
-      ps = subprocess.check_output(['flatpak', 'ps'], encoding='utf-8')
+      ps = subprocess.check_output(['flatpak', 'ps'], encoding='utf-8', env=self.environ)
       return 'com.teamspeak.TeamSpeak3' in ps
     except:
       return False
@@ -185,15 +198,8 @@ class FlatpakTeamSpeak(TeamSpeak):
     if self.is_running():
       return
 
-    uid = os.getuid()
-
-    env = dict(os.environ)
-    env['DISPLAY'] = ':0'
-    env['PULSE_SERVER'] = f'unix:/run/user/{uid}/pulse/native'
-    env['PULSE_CLIENTCONFIG'] = f'/run/user/{uid}/pulse/config'
-
     try:
-      subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak3'], env=env)
+      subprocess.Popen(['flatpak', 'run', 'com.teamspeak.TeamSpeak3'], env=self.environ)
     except:
       pass
 
@@ -202,13 +208,13 @@ class FlatpakTeamSpeak(TeamSpeak):
       return
 
     try:
-      subprocess.run(['flatpak', 'kill', 'com.teamspeak.TeamSpeak3'])
+      subprocess.run(['flatpak', 'kill', 'com.teamspeak.TeamSpeak3'], env=self.environ)
     except:
       pass
 
   def is_installed(self):
     try:
-      ls = subprocess.check_output(['flatpak', 'list'], encoding='utf-8')
+      ls = subprocess.check_output(['flatpak', 'list'], encoding='utf-8', env=self.environ)
       return 'com.teamspeak.TeamSpeak3' in ls
     except:
       return False
@@ -221,7 +227,7 @@ class FlatpakTeamSpeak(TeamSpeak):
       return False
 
     try:
-      subprocess.Popen(['flatpak', 'install', 'com.teamspeak.TeamSpeak3', '--noninteractive'])
+      subprocess.Run(['flatpak', 'install', 'com.teamspeak.TeamSpeak3', '--noninteractive'], env=self.environ)
       return True
     except:
       return False
