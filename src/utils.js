@@ -62,7 +62,7 @@ export function generate() {
 
   function* iterator() {
     while (true) {
-      yield new Promise(r => resolve = r);
+      yield new Promise(next => resolve = next);
     }
   }
 

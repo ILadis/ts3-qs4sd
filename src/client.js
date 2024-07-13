@@ -349,18 +349,26 @@ Client.prototype.listenEvents = function() {
   const url = this.endpoint + '/events';
 
   var { iterator, take } = generate();
-  var source = connect();
+  var source = connect(), closed = false;
 
   function connect() {
     source?.close();
-    source = new EventSource(url);
-    source.onmessage = consume;
-    source.onerror = reconnect;
-    return source;
+
+    if (!closed) {
+      source = new EventSource(url);
+      source.onmessage = consume;
+      source.onerror = reconnect;
+      return source;
+    }
   }
 
   function reconnect() {
     sleep(500).then(connect);
+  }
+
+  function shutdown() {
+    closed = true;
+    source?.close();
   }
 
   function consume(event) {
@@ -368,7 +376,13 @@ Client.prototype.listenEvents = function() {
     take(data);
   }
 
-  this.events.push(() => source);
+  const event = {
+    connect,
+    reconnect,
+    shutdown,
+  };
+
+  this.events.push(event);
   return iterator();
 };
 
@@ -393,7 +407,7 @@ Client.prototype.waitEvent = function(type) {
 
 Client.prototype.closeEvents = function() {
   while (this.events.length > 0) {
-    let source = this.events.pop()();
-    source?.close();
+    let event = this.events.pop();
+    event.shutdown();
   }
 };
