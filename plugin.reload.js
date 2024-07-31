@@ -1,6 +1,6 @@
 #!/bin/node
 
-import plugin from './plugin.json' assert { type: 'json' };
+import plugin from './plugin.json' with { type: 'json' };
 
 const auth = new Request('http://localhost:1337/auth/token');
 
