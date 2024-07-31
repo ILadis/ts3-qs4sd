@@ -7,8 +7,7 @@ export LIVE_RELOAD=1
 export CHOWN_PLUGIN_PATH=0
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LOG_LEVEL='DEBUG'
-export DECKY_VERSION='v2.11.1'
-export DECKY_DEVELOP=1
+export DECKY_VERSION='v2.12.3'
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"
