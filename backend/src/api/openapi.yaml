@@ -3,7 +3,7 @@ info:
   title: TeamSpeak 3 - Quick Access for Steam Deck
   version: 0.0.1
 servers:
-  - url: http://localhost:8000/api
+  - url: http://localhost:52259/api
 
 components:
   schemas:
@@ -129,6 +129,38 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TS3Client"
+    TS3AudioOutput:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: |
+            Index of this output device.
+        name:
+          type: string
+          description: |
+            Name of this output device.
+        volume:
+          type: number
+          format: float
+          description: |
+            Current volume of this output device.
+        muted:
+          type: boolean
+          description: |
+            If this output device is muted or not.
+    TS3AudioOutputVolume:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: |
+            Index of the output device.
+        volume:
+          type: number
+          format: float
+          description: |
+            Volume the output device should be set to.
 
 paths:
   /self:
@@ -168,6 +200,38 @@ paths:
           application/json:
             schema:
                 $ref: "#/components/schemas/TS3DeviceRef"
+      responses:
+        200:
+          description: ""
+  /self/afk:
+    post:
+      tags: [self]
+      description: |
+        Sets afk status of self TeamSpeak 3 client.
+      responses:
+        200:
+          description: ""
+  /self/unafk:
+    post:
+      tags: [self]
+      description: |
+        Unsets afk status of self TeamSpeak 3 client.
+      responses:
+        200:
+          description: ""
+  /self/ptt/rebind:
+    post:
+      tags: [self]
+      description: |
+        Requests a rebind of the current Push-to-Talk hotkey.
+      responses:
+        200:
+          description: ""
+  /self/ptt/clear:
+    post:
+      tags: [self]
+      description: |
+        Clears the current Push-to-Talk hotkey.
       responses:
         200:
           description: ""
@@ -270,6 +334,33 @@ paths:
       tags: [cursor]
       description: |
         Joins the TeamSpeak 3 channel the cursor is pointing to.
+      responses:
+        200:
+          description: ""
+
+  /audio/outputs:
+    get:
+      tags: [audio]
+      description: |
+        Returns available audio output devices.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TS3AudioOutput"
+  /audio/outputs/volume:
+    post:
+      tags: [audio]
+      description: |
+        Changes the volume of a specific audio output device.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+               $ref: "#/components/schemas/TS3AudioOutputVolume"
       responses:
         200:
           description: ""
