@@ -13,6 +13,7 @@
 
 // paudio json objects
 #define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%s"
+#define HTTP_JSON_AUDIO_INPUT "\"id\":%m,\"name\":%m,\"current\":%s"
 
 // common json objects
 #define HTTP_JSON_EVENT "\"type\":%m"
@@ -51,6 +52,8 @@ struct mg_handler* mg_handler_events();
 
 struct mg_handler* mg_handler_get_audio_outputs();
 struct mg_handler* mg_handler_set_audio_output_volume();
+struct mg_handler* mg_handler_get_audio_inputs();
+struct mg_handler* mg_handler_set_current_audio_input();
 
 static inline void mg_http_api_response(
     struct mg_connection *conn,

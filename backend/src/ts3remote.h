@@ -27,12 +27,20 @@ struct TS3Bookmark {
   char *uuid;
 };
 
+struct TS3CaptureDevice {
+  char *id;
+  char *name;
+  bool isCurrent;
+};
+
 struct TS3Remote {
   uint64 handle;
 
   struct TS3Server {
     int status;
     char *name;
+    struct TS3CaptureDevice captureDevices[20];
+    int numCaptureDevices;
     struct TS3Bookmark bookmarks[50];
     int numBookmarks;
   } server;
@@ -76,6 +84,9 @@ struct TS3Remote {
 #define TS3Remote_guardHandleIsset(remote, ...) do { if (remote->handle == 0) return __VA_ARGS__; } while(0);
 
 struct TS3Remote* TS3Remote_getInstance(uint64 handle);
+
+void TS3Remote_updateCaptureDevices(struct TS3Remote *remote);
+bool TS3Remote_openCaptureDevice(struct TS3Remote *remote, const char *id);
 
 bool TS3Remote_loadBookmarks(struct TS3Remote *remote);
 bool TS3Remote_connectBookmark(struct TS3Remote *remote, const char *uuid);

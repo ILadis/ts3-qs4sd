@@ -52,6 +52,8 @@ int ts3plugin_init() {
   mg_server_add_handler(&server, mg_handler_events());
   mg_server_add_handler(&server, mg_handler_get_audio_outputs());
   mg_server_add_handler(&server, mg_handler_set_audio_output_volume());
+  mg_server_add_handler(&server, mg_handler_get_audio_inputs());
+  mg_server_add_handler(&server, mg_handler_set_current_audio_input());
 
   bool result = mg_server_start(&server, SERVER_PORT);
   if (!result) {

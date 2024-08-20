@@ -97,6 +97,87 @@ static void TS3Channel_update(struct TS3Channel *channel, uint64 id, struct TS3R
   }
 }
 
+static void TS3CaptureDevice_reset(struct TS3CaptureDevice *device) {
+  device->isCurrent = false;
+  TS3Remote_freeMemory((void **) &device->id);
+  TS3Remote_freeMemory((void **) &device->name);
+}
+
+static void TS3CaptureDevice_update(struct TS3CaptureDevice *device, char **item, char *current) {
+  TS3CaptureDevice_reset(device);
+
+  if (item != NULL) {
+    device->id = item[1];
+    device->name = item[0];
+
+    if (current != NULL && strcmp(device->id, current) == 0) {
+      device->isCurrent = true;
+    }
+  }
+}
+
+void TS3Remote_updateCaptureDevices(struct TS3Remote *remote) {
+  struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
+  struct TS3Server *server = &remote->server;
+
+  server->numCaptureDevices = 0;
+  for (int i = 0; i < length(server->captureDevices); i++) {
+    TS3CaptureDevice_reset(&server->captureDevices[i]);
+  }
+
+  TS3Remote_guardHandleIsset(remote);
+
+  char *mode = NULL;
+  ts3->getDefaultCaptureMode(&mode);
+
+  char *current = NULL;
+  ts3->getCurrentCaptureDeviceName(remote->handle, &current, NULL);
+
+  char ***devices = NULL;
+  ts3->getCaptureDeviceList(mode, &devices);
+
+  for (int i = 0; devices[i] != NULL; i++) {
+    if (i < length(server->captureDevices)) {
+      int j = server->numCaptureDevices++;
+      TS3CaptureDevice_update(&server->captureDevices[j], devices[i], current);
+    }
+    else {
+      TS3Remote_freeMemory((void **) &devices[i][0]);
+      TS3Remote_freeMemory((void **) &devices[i][1]);
+    }
+
+    TS3Remote_freeMemory((void **) &devices[i]);
+  }
+
+  TS3Remote_freeMemory((void **) &devices);
+  TS3Remote_freeMemory((void **) &current);
+  TS3Remote_freeMemory((void **) &mode);
+}
+
+bool TS3Remote_openCaptureDevice(struct TS3Remote *remote, const char *id) {
+  struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
+
+  TS3Remote_guardHandleIsset(remote, false);
+
+  if (id != NULL) {
+    ts3->closeCaptureDevice(remote->handle);
+
+    char *mode = NULL;
+    ts3->getDefaultCaptureMode(&mode);
+
+    int result = ts3->openCaptureDevice(remote->handle, mode, id);
+    TS3Remote_freeMemory((void **) &mode);
+
+    if (result == 0) {
+      TS3Remote_updateCaptureDevices(remote);
+      TS3Remote_shouldTalk(remote, true);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 static void TS3Bookmark_reset(struct TS3Bookmark *bookmark) {
   TS3Remote_freeMemory((void **) &bookmark->name);
   TS3Remote_freeMemory((void **) &bookmark->uuid);
@@ -112,14 +193,13 @@ static void TS3Bookmark_update(struct TS3Bookmark *bookmark, struct PluginBookma
 }
 
 static void TS3Remote_iterateBookmarkList(struct TS3Remote *remote, struct PluginBookmarkList *list) {
-  struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
   struct TS3Server *server = &remote->server;
 
   for (int i = 0; i < list->itemcount; i++) {
     struct PluginBookmarkItem *item = &list->items[i];
 
     if (item->isFolder) {
-      ts3->freeMemory(item->name);
+      TS3Remote_freeMemory((void **) &item->name);
       TS3Remote_iterateBookmarkList(remote, item->folder);
     }
     else if (server->numBookmarks < length(server->bookmarks)) {
@@ -141,7 +221,7 @@ bool TS3Remote_loadBookmarks(struct TS3Remote *remote) {
   struct PluginBookmarkList *list = NULL;
   if (ts3->getBookmarkList(&list) == 0) {
     TS3Remote_iterateBookmarkList(remote, list);
-    ts3->freeMemory(list);
+    TS3Remote_freeMemory((void **) &list);
 
     return true;
   }
