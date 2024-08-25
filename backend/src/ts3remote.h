@@ -27,20 +27,12 @@ struct TS3Bookmark {
   char *uuid;
 };
 
-struct TS3CaptureDevice {
-  char *id;
-  char *name;
-  bool isCurrent;
-};
-
 struct TS3Remote {
   uint64 handle;
 
   struct TS3Server {
     int status;
     char *name;
-    struct TS3CaptureDevice captureDevices[20];
-    int numCaptureDevices;
     struct TS3Bookmark bookmarks[50];
     int numBookmarks;
   } server;

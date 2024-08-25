@@ -193,11 +193,22 @@ void ts3plugin_onUpdateClientEvent(
 }
 
 void paudio_onReady(struct PAudio *paudio) {
-  PAudio_updateOutputs(paudio);
+  PAudio_updateOutputStreams(paudio);
+
+  PAudio_updateInputDevices(paudio);
+  PAudio_updateInputStreams(paudio);
 }
 
-void paudio_onOutputsChanged(struct PAudio *paudio) {
+void paudio_onOutputStreamsChanged(struct PAudio *paudio) {
   mg_server_user_event(&server, AUDIO_OUTPUTS_CHANGED, NULL);
+}
+
+void paudio_onInputStreamsChanged(struct PAudio *paudio) {
+  // nothing to do, maybe implement user event later
+}
+
+void paudio_onInputDevicesChanged(struct PAudio *paudio) {
+  // nothing to do, maybe implement user event later
 }
 
 void paudio_onError(struct PAudio *paudio, const char *message) {

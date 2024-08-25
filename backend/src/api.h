@@ -13,7 +13,7 @@
 
 // paudio json objects
 #define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%s"
-#define HTTP_JSON_AUDIO_INPUT "\"id\":%m,\"name\":%m,\"current\":%s"
+#define HTTP_JSON_AUDIO_INPUT "\"index\":%d,\"name\":%m,\"current\":%s"
 
 // common json objects
 #define HTTP_JSON_EVENT "\"type\":%m"

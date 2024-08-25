@@ -15,18 +15,34 @@
  * https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/blob/master/src/utils/pactl.c
  */
 
+struct PAudioStream {
+  int index;
+  char name[250];
+  double volume;
+  bool muted;
+  struct PAudioDevice *source;
+};
+
+struct PAudioDevice {
+  int id;
+  int index;
+  char name[250];
+};
+
 struct PAudio {
   pa_mainloop *mainloop;
   pa_mainloop_api *api;
   pa_context *context;
   pa_proplist *proplist;
 
-  struct PAudioOutput {
-    int index;
-    char name[250];
-    double volume;
-    bool muted;
-  } outputs[10];
+  struct {
+    struct PAudioStream output[10]; // playback
+    struct PAudioStream input[10]; // recording
+  } streams;
+
+  struct {
+    struct PAudioDevice input[10];
+  } devices;
 };
 
 #define PAudio_guardContextIsset(paudio, ...) do { if (paudio->context == NULL) return __VA_ARGS__; } while(0);
@@ -40,15 +56,23 @@ bool PAudio_connect(struct PAudio *paudio);
 bool PAudio_runLoop(struct PAudio *paudio);
 void PAudio_shutdown(struct PAudio *paudio);
 
-bool PAudio_updateOutput(struct PAudio *paudio, int index);
-bool PAudio_updateOutputs(struct PAudio *paudio);
-bool PAudio_nextOutput(struct PAudio *paudio, struct PAudioOutput **output);
+void PAudio_updateOutputStreams(struct PAudio *paudio);
+void PAudio_updateInputStreams(struct PAudio *paudio);
+void PAudio_updateInputDevices(struct PAudio *paudio);
 
-bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume);
+bool PAudio_nextOutputStream(struct PAudio *paudio, struct PAudioStream **output);
+bool PAudio_setOutputStreamVolume(struct PAudio *paudio, int index, double volume);
+
+bool PAudio_findInputStream(struct PAudio *paudio, struct PAudioStream **input, const char *name);
+bool PAudio_changeInputStreamSourceDevice(struct PAudio *paudio, struct PAudioStream *input, int index);
+
+bool PAudio_nextInputDevice(struct PAudio *paudio, struct PAudioDevice **input);
 
 // external callbacks
 extern void paudio_onReady(struct PAudio *paudio);
-extern void paudio_onOutputsChanged(struct PAudio *paudio);
+extern void paudio_onOutputStreamsChanged(struct PAudio *paudio);
+extern void paudio_onInputStreamsChanged(struct PAudio *paudio);
+extern void paudio_onInputDevicesChanged(struct PAudio *paudio);
 extern void paudio_onError(struct PAudio *paudio, const char *message);
 
 #endif

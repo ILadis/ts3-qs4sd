@@ -6,7 +6,15 @@ static void PAudio_subscriptionCallback(pa_context *context, pa_subscription_eve
 static void PAudio_contextStateCallback(pa_context *context, void *data);
 
 static bool PAudio_setupSubscription(struct PAudio *paudio);
-static void PAudio_removeOutput(struct PAudio *paudio, int index);
+
+static void PAudio_removeOutputStream(struct PAudio *paudio, int index);
+static void PAudio_updateOutputStream(struct PAudio *paudio, int index);
+
+static void PAudio_removeInputStream(struct PAudio *paudio, int index);
+static void PAudio_updateInputStream(struct PAudio *paudio, int index);
+
+static void PAudio_removeInputDevice(struct PAudio *paudio, int index);
+static void PAudio_updateInputDevice(struct PAudio *paudio, int index);
 
 struct PAudio* PAudio_getInstance() {
   static struct PAudio paudio = {0};
@@ -35,6 +43,7 @@ bool PAudio_connect(struct PAudio *paudio) {
    * https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/667
    */
   proplist = paudio->proplist = pa_proplist_new();
+
   pa_proplist_sets(proplist, "media.type", "Audio");
   pa_proplist_sets(proplist, "media.category", "Manager");
   pa_proplist_sets(proplist, "media.role", "Music");
@@ -153,8 +162,16 @@ static bool PAudio_setupSubscription(struct PAudio *paudio) {
   pa_context *context = paudio->context;
   pa_operation *operation = NULL;
 
+  pa_subscription_mask_t mask = 0
+      // applications that are sending audio to sinks (= output devices)
+      | PA_SUBSCRIPTION_MASK_SINK_INPUT
+      // applications that are receiving audio from sources (= input devices)
+      | PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT
+      // devices that are audio sources (= input devices)
+      | PA_SUBSCRIPTION_MASK_SOURCE;
+
   pa_context_set_subscribe_callback(context, PAudio_subscriptionCallback, paudio);
-  operation = pa_context_subscribe(context, (pa_subscription_mask_t) (PA_SUBSCRIPTION_MASK_SINK_INPUT), NULL, NULL);
+  operation = pa_context_subscribe(context, mask, NULL, NULL);
   if (operation != NULL) {
     pa_operation_unref(operation);
     return true;
@@ -172,19 +189,77 @@ static void PAudio_subscriptionCallback(pa_context *context, pa_subscription_eve
   switch (facility) {
   case PA_SUBSCRIPTION_EVENT_SINK_INPUT:
     if (type == PA_SUBSCRIPTION_EVENT_REMOVE) {
-      PAudio_removeOutput(paudio, index);
+      PAudio_removeOutputStream(paudio, index);
     } else {
-      PAudio_updateOutput(paudio, index);
+      PAudio_updateOutputStream(paudio, index);
+    }
+    break;
+  case PA_SUBSCRIPTION_EVENT_SOURCE_OUTPUT:
+    if (type == PA_SUBSCRIPTION_EVENT_REMOVE) {
+      PAudio_removeInputStream(paudio, index);
+    } else {
+      PAudio_updateInputStream(paudio, index);
+    }
+    break;
+  case PA_SUBSCRIPTION_EVENT_SOURCE:
+    if (type == PA_SUBSCRIPTION_EVENT_REMOVE) {
+      PAudio_removeInputDevice(paudio, index);
+    } else {
+      PAudio_updateInputDevice(paudio, index);
     }
     break;
   }
 }
 
-static void PAudioOutput_reset(struct PAudioOutput *output) {
-  memset(output, 0, sizeof(*output));
+static void PAudioStream_reset(struct PAudioStream *stream) {
+  memset(stream, 0, sizeof(*stream));
 }
 
-static void PAudioOutput_update(struct PAudioOutput *output, const pa_sink_input_info *info) {
+static bool PAudioStream_hasName(struct PAudioStream *stream) {
+  return strlen(stream->name) > 0;
+}
+
+static bool PAudioStream_changed(struct PAudioStream *stream, struct PAudioStream *other) {
+  bool changed = false;
+
+  changed |= stream->index != other->index;
+  changed |= stream->muted != other->muted;
+  changed |= abs(stream->volume - other->volume) > 0.01;
+  changed |= strncmp(stream->name, other->name, sizeof(stream->name));
+  changed |= stream->source != other->source;
+
+  return changed;
+}
+
+static struct PAudioStream* PAudioStream_next(struct PAudioStream *streams, int length) {
+  struct PAudioStream *stream = NULL;
+
+  for (int i = 0; i < length; i++) {
+    bool found = streams[i].index == 0;
+    if (found) {
+      stream = &streams[i];
+      break;
+    }
+  }
+
+  return stream;
+}
+
+static struct PAudioStream* PAudioStream_byIndex(struct PAudioStream *streams, int length, int index) {
+  struct PAudioStream *stream = NULL;
+
+  for (int i = 0; i < length; i++) {
+    bool found = streams[i].index == index;
+    if (found) {
+      stream = &streams[i];
+      break;
+    }
+  }
+
+  return stream;
+}
+
+static void PAudioStream_updateFromSinkInput(struct PAudioStream *output, const pa_sink_input_info *info) {
   output->index = info->index;
   output->muted = info->mute == 1;
 
@@ -196,61 +271,107 @@ static void PAudioOutput_update(struct PAudioOutput *output, const pa_sink_input
     output->volume = percentage;
   }
 
-  const char *name = pa_proplist_gets(proplist, "application.name");
+  const char *name = pa_proplist_gets(proplist, PA_PROP_APPLICATION_NAME);
   if (name != NULL) {
     snprintf(output->name, sizeof(output->name), "%s", name);
   }
 }
 
-static bool PAudioOutput_hasName(struct PAudioOutput *output) {
-  return strlen(output->name) > 0;
+static void PAudioStream_updateFromSourceOutput(struct PAudioStream *input, const pa_source_output_info *info) {
+  input->index = info->index;
+  input->muted = info->mute == 1;
+
+  const pa_cvolume *volume = &info->volume;
+  const pa_proplist *proplist = info->proplist;
+
+  if (volume->channels > 0) {
+    double percentage = PAudio_volumeToPercentage(volume->values[0]);
+    input->volume = percentage;
+  }
+
+  const char *name = pa_proplist_gets(proplist, PA_PROP_APPLICATION_NAME);
+  if (name != NULL) {
+    snprintf(input->name, sizeof(input->name), "%s", name);
+  }
 }
 
-static bool PAudioOutput_changed(struct PAudioOutput *output, struct PAudioOutput *other) {
+static void PAudioDevice_reset(struct PAudioDevice *device) {
+  memset(device, 0, sizeof(*device));
+}
+
+static bool PAudioDevice_hasName(struct PAudioDevice *device) {
+  return strlen(device->name) > 0;
+}
+
+static bool PAudioDevice_changed(struct PAudioDevice *device, struct PAudioDevice *other) {
   bool changed = false;
 
-  changed |= output->index != other->index;
-  changed |= output->muted != other->muted;
-  changed |= abs(output->volume - other->volume) > 0.01;
-  changed |= strcmp(output->name, other->name);
+  changed |= device->index != other->index;
+  changed |= strncmp(device->name, other->name, sizeof(device->name));
 
   return changed;
 }
 
-static struct PAudioOutput* PAudio_getNextAudioOutput(struct PAudio *paudio) {
-  struct PAudioOutput *output = NULL;
+static struct PAudioDevice* PAudioDevice_next(struct PAudioDevice *devices, int length) {
+  struct PAudioDevice *device = NULL;
 
-  for (int i = 0; i < length(paudio->outputs); i++) {
-    bool found = paudio->outputs[i].index == 0;
+  for (int i = 0; i < length; i++) {
+    bool found = devices[i].index == 0;
     if (found) {
-      output = &paudio->outputs[i];
+      device = &devices[i];
       break;
     }
   }
 
-  return output;
+  return device;
 }
 
-static struct PAudioOutput* PAudio_getAudioOutputByIndex(struct PAudio *paudio, int index) {
-  struct PAudioOutput *output = NULL;
+static struct PAudioDevice* PAudioDevice_byId(struct PAudioDevice *devices, int length, int id) {
+  struct PAudioDevice *device = NULL;
 
-  for (int i = 0; i < length(paudio->outputs); i++) {
-    bool found = paudio->outputs[i].index == index;
+  for (int i = 0; i < length; i++) {
+    bool found = devices[i].id == id;
     if (found) {
-      output = &paudio->outputs[i];
+      device = &devices[i];
       break;
     }
   }
 
-  return output;
+  return device;
 }
 
-static void PAudio_removeOutput(struct PAudio *paudio, int index) {
-  struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, index);
-  if (output != NULL) {
-    PAudioOutput_reset(output);
-    paudio_onOutputsChanged(paudio);
+static struct PAudioDevice* PAudioDevice_byIndex(struct PAudioDevice *devices, int length, int index) {
+  struct PAudioDevice *device = NULL;
+
+  for (int i = 0; i < length; i++) {
+    bool found = devices[i].index == index;
+    if (found) {
+      device = &devices[i];
+      break;
+    }
   }
+
+  return device;
+}
+
+static void PAudioDevice_updateFromSink(struct PAudioDevice *device, const pa_source_info *info) {
+  device->id = info->card;
+  device->index = info->index;
+
+  const pa_proplist *proplist = info->proplist;
+  const char *name = pa_proplist_gets(proplist, PA_PROP_DEVICE_DESCRIPTION);
+
+  if (name != NULL) {
+    snprintf(device->name, sizeof(device->name), "%s", name);
+  }
+}
+
+static struct PAudioStream* PAudio_getNextAudioOutputStream(struct PAudio *paudio) {
+  return PAudioStream_next(paudio->streams.output, length(paudio->streams.output));
+}
+
+static struct PAudioStream* PAudio_getAudioOutputStreamByIndex(struct PAudio *paudio, int index) {
+  return PAudioStream_byIndex(paudio->streams.output, length(paudio->streams.output), index);
 }
 
 static void PAudio_sinkInputInfoCallback(pa_context *context, const pa_sink_input_info *info, int last, void *data) {
@@ -258,54 +379,56 @@ static void PAudio_sinkInputInfoCallback(pa_context *context, const pa_sink_inpu
 
   PAudio_guardLastCallback(last);
 
-  struct PAudioOutput target = {0};
-  PAudioOutput_update(&target, info);
+  struct PAudioStream target = {0};
+  PAudioStream_updateFromSinkInput(&target, info);
 
-  if (!PAudioOutput_hasName(&target)) {
-    return; // only add output devices with application names
+  if (!PAudioStream_hasName(&target)) {
+    return; // only add output streams which have an application name associated with it
   }
 
-  struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
+  struct PAudioStream *output = PAudio_getAudioOutputStreamByIndex(paudio, info->index);
   if (output == NULL) {
-    output = PAudio_getNextAudioOutput(paudio);
+    output = PAudio_getNextAudioOutputStream(paudio);
   }
 
   if (output != NULL) {
-    if (PAudioOutput_changed(output, &target)) {
+    if (PAudioStream_changed(output, &target)) {
       *output = target;
-      paudio_onOutputsChanged(paudio);
+      paudio_onOutputStreamsChanged(paudio);
     }
   }
 }
 
-bool PAudio_updateOutput(struct PAudio *paudio, int index) {
+static void PAudio_removeOutputStream(struct PAudio *paudio, int index) {
+  struct PAudioStream *output = PAudio_getAudioOutputStreamByIndex(paudio, index);
+  if (output != NULL) {
+    PAudioStream_reset(output);
+    paudio_onOutputStreamsChanged(paudio);
+  }
+}
+
+static void PAudio_updateOutputStream(struct PAudio *paudio, int index) {
   pa_context *context = paudio->context;
   pa_operation *operation = NULL;
 
-  PAudio_guardContextIsset(paudio, false);
+  PAudio_guardContextIsset(paudio);
 
   operation = pa_context_get_sink_input_info(context, index, PAudio_sinkInputInfoCallback, paudio);
   if (operation != NULL) {
     pa_operation_unref(operation);
-    return true;
   }
-
-  return false;
 }
 
-bool PAudio_updateOutputs(struct PAudio *paudio) {
+void PAudio_updateOutputStreams(struct PAudio *paudio) {
   pa_context *context = paudio->context;
   pa_operation *operation = NULL;
 
-  PAudio_guardContextIsset(paudio, false);
+  PAudio_guardContextIsset(paudio);
 
   operation = pa_context_get_sink_input_info_list(context, PAudio_sinkInputInfoCallback, paudio);
   if (operation != NULL) {
     pa_operation_unref(operation);
-    return true;
   }
-
-  return false;
 }
 
 static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink_input_info *info, int last, void *data) {
@@ -314,9 +437,9 @@ static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink
 
   PAudio_guardLastCallback(last);
 
-  struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, info->index);
+  struct PAudioStream *output = PAudio_getAudioOutputStreamByIndex(paudio, info->index);
   if (output == NULL) {
-    return paudio_onError(paudio, "failed to get PAudioOutput by index");
+    return paudio_onError(paudio, "failed to get PAudioStream (output) by index");
   }
 
   int channels = info->channel_map.channels;
@@ -331,13 +454,13 @@ static void PAudio_setSinkInputVolumeCallback(pa_context *context, const pa_sink
   }
 }
 
-bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume) {
+bool PAudio_setOutputStreamVolume(struct PAudio *paudio, int index, double volume) {
   pa_context *context = paudio->context;
   pa_operation *operation = NULL;
 
   PAudio_guardContextIsset(paudio, false);
 
-  struct PAudioOutput *output = PAudio_getAudioOutputByIndex(paudio, index);
+  struct PAudioStream *output = PAudio_getAudioOutputStreamByIndex(paudio, index);
   if (output == NULL) {
     return false;
   }
@@ -353,12 +476,12 @@ bool PAudio_setOutputVolume(struct PAudio *paudio, int index, double volume) {
   return false;
 }
 
-bool PAudio_nextOutput(struct PAudio *paudio, struct PAudioOutput **output) {
-  struct PAudioOutput *previous = *output, *next = NULL;
-  int last = length(paudio->outputs) - 1;
+bool PAudio_nextOutputStream(struct PAudio *paudio, struct PAudioStream **output) {
+  struct PAudioStream *previous = *output, *next = NULL;
+  int last = length(paudio->streams.output) - 1;
 
   if (previous == NULL) {
-    next = &paudio->outputs[0];
+    next = &paudio->streams.output[0];
   } else {
     next = previous + 1;
   }
@@ -370,7 +493,202 @@ bool PAudio_nextOutput(struct PAudio *paudio, struct PAudioOutput **output) {
     }
 
     next++;
-  } while (next != &paudio->outputs[last]);
+  } while (next != &paudio->streams.output[last]);
+
+  return false;
+}
+
+static struct PAudioStream* PAudio_getNextAudioInputStream(struct PAudio *paudio) {
+  return PAudioStream_next(paudio->streams.input, length(paudio->streams.input));
+}
+
+static struct PAudioStream* PAudio_getAudioInputStreamByIndex(struct PAudio *paudio, int index) {
+  return PAudioStream_byIndex(paudio->streams.input, length(paudio->streams.input), index);
+}
+
+static struct PAudioDevice* PAudio_getAudioInputDeviceByIndex(struct PAudio *paudio, int index);
+
+static void PAudio_sourceOutputInfoCallback(pa_context *context, const pa_source_output_info *info, int last, void *data) {
+  struct PAudio *paudio = data;
+
+  PAudio_guardLastCallback(last);
+
+  struct PAudioStream target = {0};
+  PAudioStream_updateFromSourceOutput(&target, info);
+
+  if (!PAudioStream_hasName(&target)) {
+    return; // only add input streams which have an application name associated with it
+  }
+
+  struct PAudioDevice *source = PAudio_getAudioInputDeviceByIndex(paudio, info->source);
+  target.source = source;
+
+  struct PAudioStream *input = PAudio_getAudioInputStreamByIndex(paudio, info->index);
+  if (input == NULL) {
+    input = PAudio_getNextAudioInputStream(paudio);
+  }
+
+  if (input != NULL) {
+    if (PAudioStream_changed(input, &target)) {
+      *input = target;
+      paudio_onInputStreamsChanged(paudio);
+    }
+  }
+}
+
+static void PAudio_removeInputStream(struct PAudio *paudio, int index) {
+  struct PAudioStream *input = PAudio_getAudioInputStreamByIndex(paudio, index);
+  if (input != NULL) {
+    PAudioStream_reset(input);
+    paudio_onInputStreamsChanged(paudio);
+  }
+}
+
+static void PAudio_updateInputStream(struct PAudio *paudio, int index) {
+  pa_context *context = paudio->context;
+  pa_operation *operation = NULL;
+
+  PAudio_guardContextIsset(paudio);
+
+  operation = pa_context_get_source_output_info(context, index, PAudio_sourceOutputInfoCallback, paudio);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+  }
+}
+
+void PAudio_updateInputStreams(struct PAudio *paudio) {
+  pa_context *context = paudio->context;
+  pa_operation *operation = NULL;
+
+  PAudio_guardContextIsset(paudio);
+
+  operation = pa_context_get_source_output_info_list(context, PAudio_sourceOutputInfoCallback, paudio);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+  }
+}
+
+bool PAudio_findInputStream(struct PAudio *paudio, struct PAudioStream **input, const char *name) {
+  for (int i = 0; i < length(paudio->streams.input); i++) {
+    struct PAudioStream *stream = &paudio->streams.input[i];
+    bool found = strncmp(stream->name, name, sizeof(stream->name)) == 0;
+
+    if (found) {
+      *input = stream;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool PAudio_changeInputStreamSourceDevice(struct PAudio *paudio, struct PAudioStream *input, int index) {
+  pa_context *context = paudio->context;
+  pa_operation *operation = NULL;
+
+  PAudio_guardContextIsset(paudio, false);
+
+  struct PAudioDevice *device = PAudio_getAudioInputDeviceByIndex(paudio, index);
+  if (device == NULL) {
+    return false;
+  }
+
+  operation = pa_context_move_source_output_by_index(context, input->index, device->index, NULL, NULL);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+    return true;
+  }
+
+  return false;
+}
+
+static struct PAudioDevice* PAudio_getNextAudioInputDevice(struct PAudio *paudio) {
+  return PAudioDevice_next(paudio->devices.input, length(paudio->devices.input));
+}
+
+static struct PAudioDevice* PAudio_getAudioInputDeviceById(struct PAudio *paudio, int id) {
+  return PAudioDevice_byId(paudio->devices.input, length(paudio->devices.input), id);
+}
+
+static struct PAudioDevice* PAudio_getAudioInputDeviceByIndex(struct PAudio *paudio, int index) {
+  return PAudioDevice_byIndex(paudio->devices.input, length(paudio->devices.input), index);
+}
+
+static void PAudio_sourceInfoCallback(pa_context *context, const pa_source_info *info, int last, void *data) {
+  struct PAudio *paudio = data;
+
+  PAudio_guardLastCallback(last);
+
+  struct PAudioDevice target = {0};
+  PAudioDevice_updateFromSink(&target, info);
+
+  if (!PAudioDevice_hasName(&target)) {
+    return; // only add input devices with names
+  }
+
+  struct PAudioDevice *input = PAudio_getAudioInputDeviceById(paudio, info->card);
+  if (input == NULL) {
+    input = PAudio_getNextAudioInputDevice(paudio);
+  }
+
+  if (input != NULL) {
+    if (PAudioDevice_changed(input, &target)) {
+      *input = target;
+      paudio_onInputDevicesChanged(paudio);
+    }
+  }
+}
+
+static void PAudio_removeInputDevice(struct PAudio *paudio, int index) {
+  struct PAudioDevice *input = PAudio_getAudioInputDeviceByIndex(paudio, index);
+  if (input != NULL) {
+    PAudioDevice_reset(input);
+    paudio_onInputDevicesChanged(paudio);
+  }
+}
+
+static void PAudio_updateInputDevice(struct PAudio *paudio, int index) {
+  pa_context *context = paudio->context;
+  pa_operation *operation = NULL;
+
+  PAudio_guardContextIsset(paudio);
+
+  operation = pa_context_get_source_info_by_index(context, index, PAudio_sourceInfoCallback, paudio);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+  }
+}
+
+void PAudio_updateInputDevices(struct PAudio *paudio) {
+  pa_context *context = paudio->context;
+  pa_operation *operation = NULL;
+
+  PAudio_guardContextIsset(paudio);
+
+  operation = pa_context_get_source_info_list(context, PAudio_sourceInfoCallback, paudio);
+  if (operation != NULL) {
+    pa_operation_unref(operation);
+  }
+}
+
+bool PAudio_nextInputDevice(struct PAudio *paudio, struct PAudioDevice **input) {
+  struct PAudioDevice *previous = *input, *next = NULL;
+  int last = length(paudio->devices.input) - 1;
+
+  if (previous == NULL) {
+    next = &paudio->devices.input[0];
+  } else {
+    next = previous + 1;
+  }
+
+  do {
+    if (next->index != 0) {
+      *input = next;
+      return true;
+    }
+
+    next++;
+  } while (next != &paudio->devices.input[last]);
 
   return false;
 }
