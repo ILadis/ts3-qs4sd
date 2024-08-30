@@ -11,7 +11,8 @@ import decky_plugin
 # Note: all plugin arguments are pointing to Plugin and not to an instance of it
 class Plugin:
   async def _main(plugin):
-    plugin.teamspeak = FlatpakTeamSpeak()
+    variant = os.environ.get('PLUGIN_VARIANT')
+    plugin.teamspeak = TeamSpeak.choose_variant(variant)
 
   async def install(plugin):
     decky_plugin.logger.debug('Attempting to install TeamSpeak 3')
@@ -41,11 +42,23 @@ class Plugin:
     plugin.teamspeak.stop()
 
 class TeamSpeak:
+  @staticmethod
+  def choose_variant(variant):
+    variants = dict({
+      'develop': TeamSpeak,
+      'flatpak': FlatpakTeamSpeak,
+      'native': NativeTeamSpeak,
+    })
+
+    teamspeak = variants.get(variant, FlatpakTeamSpeak)
+
+    return teamspeak()
+
   def configdir():
     pass
 
   def is_running(self):
-    return False
+    return True
 
   def start(self):
     pass
@@ -54,7 +67,7 @@ class TeamSpeak:
     pass
 
   def is_installed(self):
-    return False
+    return True
 
   def install(self):
     return False

@@ -8,6 +8,7 @@ export CHOWN_PLUGIN_PATH=0
 export PLUGIN_PATH="${SELF_DIR}/plugins"
 export LOG_LEVEL='DEBUG'
 export DECKY_VERSION='v2.12.3'
+export PLUGIN_VARIANT='develop'
 
 if [ ! -f "${SELF_DIR}/services/PluginLoader" ]; then
   mkdir -p "${SELF_DIR}/services"
@@ -19,9 +20,10 @@ fi
 # For testing on Steam Deck setup port forwarding between
 # development machine and Steam Deck via SSH:
 #
-# $ ssh -T -L 8080:127.0.0.1:8080 deck
-# $ ssh -T -R 1337:127.0.0.1:1337 deck
-# $ ssh -T -R 52259:127.0.0.1:52259 deck
+# $ ssh deck -T \
+#     -L 8080:127.0.0.1:8080 \
+#     -R 1337:127.0.0.1:1337 \
+#     -R 52259:127.0.0.1:52259
 
 (
   cd "${SELF_DIR}/services"
