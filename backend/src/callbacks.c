@@ -208,7 +208,7 @@ void paudio_onInputStreamsChanged(struct PAudio *paudio) {
 }
 
 void paudio_onInputDevicesChanged(struct PAudio *paudio) {
-  // nothing to do, maybe implement user event later
+  mg_server_user_event(&server, AUDIO_INPUTS_CHANGED, NULL);
 }
 
 void paudio_onError(struct PAudio *paudio, const char *message) {

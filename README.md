@@ -46,7 +46,7 @@ This should create a `plugin.zip` file containing both the front- and backend pa
 ## Installing
 
 Follow these steps in order to install and setup the plugin on your Steam Deck:
-1. Install DeckyLoader on your SteamDeck as described [here](https://github.com/SteamDeckHomebrew/PluginLoader).
+1. Install DeckyLoader on your Steam Deck as described [here](https://github.com/SteamDeckHomebrew/PluginLoader).
 1. Switch to desktop mode, download TeamSpeak 3 from the Discover store and launch it.
 1. Add all TeamSpeak servers you want to connect to as bookmarks (Bookmarks ⇾ Manage Bookmarks).
 1. If you want to use Push-to-Talk allow TeamSpeak to access your Steam Deck inputs:  

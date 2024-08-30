@@ -5,6 +5,7 @@ import {
   Field,
   Focusable,
   TextField,
+  Dropdown,
   SliderField,
   PanelSection,
   PanelSectionRow,
@@ -265,6 +266,8 @@ export function TS3Settings(props) {
     outputs,
     outputChanged,
     toggleOutputs,
+    inputs,
+    changeCurrentInput,
     rebindPttHotkey,
     clearPttHotkey,
     setContent,
@@ -275,7 +278,7 @@ export function TS3Settings(props) {
   return (
     $(PanelSection, { title: 'SETTINGS' },
       $(Focusable, { onCancel },
-        $(TS3VolumeSettings, { outputs, outputChanged, toggleOutputs }),
+        $(TS3VolumeSettings, { outputs, outputChanged, toggleOutputs, inputs, changeCurrentInput }),
         $(TS3PttSettings, { self, rebindPttHotkey, clearPttHotkey }),
       )
     )
@@ -287,6 +290,8 @@ export function TS3VolumeSettings(props) {
     outputs,
     outputChanged,
     toggleOutputs,
+    inputs,
+    changeCurrentInput,
   } = props;
 
   return [
@@ -306,6 +311,16 @@ export function TS3VolumeSettings(props) {
     $(Focusable, null, outputs.map(output =>
       $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged })))
     ),
+    $(PanelSectionRow, null,
+      $(Field, { label: 'Microphone', bottomSeparator: 'none', description: ''
+        + 'Select the active input device for TeamSpeak.'
+      })
+    ),
+    $(PanelSectionRow, null,
+      $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
+        $(TS3InputDevices, { inputs, changeCurrentInput })
+      )
+    )
   ];
 }
 
@@ -317,6 +332,24 @@ export function TS3OutputDevice({ output, outputChanged }) {
       onChange: (value) => outputChanged(output, value),
       min: 0, max: 1,
       step: 0.05
+    })
+  );
+}
+
+export function TS3InputDevices(props) {
+  const {
+    inputs,
+    changeCurrentInput,
+  } = props;
+
+  const options = inputs.map(input => ({ label: input.name, data: input }));
+  const selected = inputs.find(input => input.current == true);
+
+  return (
+    $(Dropdown, {
+      rgOptions: options,
+      selectedOption: selected,
+      onChange: (option) => changeCurrentInput(option.data)
     })
   );
 }

@@ -15,6 +15,7 @@ function App({ client }) {
   const [parent, setParent] = useState([]);
   const [self, setSelf] = useState(null);
   const [outputs, setOutputs] = useState([]);
+  const [inputs, setInputs] = useState([]);
 
   function connectTo(bookmark) {
     client.connect(bookmark.uuid);
@@ -117,6 +118,20 @@ function App({ client }) {
     }));
   }
 
+  async function refreshInputs() {
+    const inputs = [];
+    for await (let output of client.getAudioInputs()) {
+      inputs.push(output);
+    }
+
+    setInputs(inputs);
+  }
+
+  function changeCurrentInput(input) {
+    const index = input.index;
+    client.setCurrentAudioInput(index);
+  }
+
   async function restoreState() {
     const status = await client.getStatus();
 
@@ -139,10 +154,11 @@ function App({ client }) {
       'CONNECTION_STATE_CONNECTED': refreshBookmarksState,
       'CONNECTION_STATE_DISCONNECTED': refreshBookmarksState,
       'CLIENT_LIST_CHANGED': refreshDashboardState,
+      'AUDIO_INPUTS_CHANGED': refreshInputs,
     };
 
     for await (let event of events) {
-      states[event.type]?.();
+      await states[event.type]?.();
     }
   }
 
@@ -174,6 +190,8 @@ function App({ client }) {
     setChannels(channels);
 
     browseChannels();
+    refreshInputs();
+
     setContent('dashboard');
   }
 
@@ -189,6 +207,7 @@ function App({ client }) {
       browser,
       self,
       outputs,
+      inputs,
       // actions
       setContent,
       connectTo,
@@ -202,6 +221,8 @@ function App({ client }) {
       clearPttHotkey,
       toggleMute,
       toggleOutputs,
+      refreshInputs,
+      changeCurrentInput,
       // events
       outputChanged,
     })

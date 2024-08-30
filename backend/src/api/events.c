@@ -40,6 +40,9 @@ static void mg_handler_events_fn(
     case AUDIO_OUTPUTS_CHANGED:
       type = "AUDIO_OUTPUTS_CHANGED";
       break;
+    case AUDIO_INPUTS_CHANGED:
+      type = "AUDIO_INPUTS_CHANGED";
+      break;
     case PTT_HOTKEYS_PRESSED:
       type = "PTT_HOTKEYS_PRESSED";
       break;

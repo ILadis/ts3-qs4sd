@@ -213,6 +213,45 @@ Client.prototype.setAudioOutputVolume = async function(index, volume) {
   }
 };
 
+Client.prototype.getAudioInputs = async function*() {
+  let url = this.endpoint + '/audio/inputs';
+
+  let request = new Request(url, {
+    method: 'GET'
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error('failed to fetch audio input devices');
+  }
+
+  let inputs = await response.json();
+
+  for (let input of inputs) {
+    yield {
+      'index': Number(input['index']),
+      'name': String(input['name']),
+      'current': Boolean(input['current']),
+    };
+  }
+};
+
+Client.prototype.setCurrentAudioInput = async function(index) {
+  let url = this.endpoint + '/audio/inputs/current';
+  let body = JSON.stringify({
+    'index': Number(index),
+  });
+
+  let request = new Request(url, {
+    method: 'POST', body
+  });
+
+  let response = await retry(() => fətch(request.clone()));
+  if (!response.ok) {
+    throw new Error('failed to set current audio input device');
+  }
+};
+
 Client.prototype.listChannels = async function() {
   let url = this.endpoint + '/clients';
 
