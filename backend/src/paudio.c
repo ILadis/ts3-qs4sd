@@ -303,6 +303,10 @@ static bool PAudioDevice_hasName(struct PAudioDevice *device) {
   return strlen(device->name) > 0;
 }
 
+static bool PAudioDevice_isUsable(struct PAudioDevice *device) {
+  return device->usable == true;
+}
+
 static bool PAudioDevice_changed(struct PAudioDevice *device, struct PAudioDevice *other) {
   bool changed = false;
 
@@ -357,6 +361,7 @@ static struct PAudioDevice* PAudioDevice_byIndex(struct PAudioDevice *devices, i
 static void PAudioDevice_updateFromSink(struct PAudioDevice *device, const pa_source_info *info) {
   device->id = info->card;
   device->index = info->index;
+  device->usable = info->active_port != NULL;
 
   const pa_proplist *proplist = info->proplist;
   const char *name = pa_proplist_gets(proplist, PA_PROP_DEVICE_DESCRIPTION);
@@ -622,8 +627,8 @@ static void PAudio_sourceInfoCallback(pa_context *context, const pa_source_info 
   struct PAudioDevice target = {0};
   PAudioDevice_updateFromSink(&target, info);
 
-  if (!PAudioDevice_hasName(&target)) {
-    return; // only add input devices with names
+  if (!PAudioDevice_isUsable(&target) || !PAudioDevice_hasName(&target)) {
+    return; // only add input devices that are "usable" and have names
   }
 
   struct PAudioDevice *input = PAudio_getAudioInputDeviceById(paudio, info->card);

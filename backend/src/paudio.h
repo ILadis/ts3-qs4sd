@@ -27,6 +27,8 @@ struct PAudioDevice {
   int id;
   int index;
   char name[250];
+  // a device is considered usable if it has an active "port" attached
+  bool usable;
 };
 
 struct PAudio {
