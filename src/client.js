@@ -425,23 +425,14 @@ Client.prototype.listenEvents = function() {
   return iterator();
 };
 
-Client.prototype.waitEvent = function(type) {
-  const url = this.endpoint + '/events';
-  const source = new EventSource(url);
+Client.prototype.waitEvent = async function(type) {
+  const events = this.listenEvents();
 
-  function consume(resolve, event) {
-    let data = JSON.parse(event.data);
-    if (data.type == type) {
-      source.close();
-      resolve(data);
+  for await (let event of events) {
+    if (event.type == type) {
+      return event;
     }
   }
-
-  this.events.push(() => source);
-  return new Promise((resolve, reject) => {
-    source.onmessage = (event) => consume(resolve, event);
-    source.onerror = reject;
-  });
 };
 
 Client.prototype.closeEvents = function() {
