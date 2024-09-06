@@ -3,6 +3,7 @@
   "version": "1.2.0",
   "description": "A TeamSpeak 3 client plugin that integrates TeamSpeak 3 into Steam Deck's quick access menu.",
   "scripts": {
+    "test": "node --test --experimental-test-module-mocks",
     "build": "rm -rf ./dist && rollup -c",
     "build:zip": "rm -rf plugin.zip && cd decky/plugins && zip -r ../../plugin.zip ts3-qs4sd",
     "plugin:reload": "./plugin.reload.mjs",
@@ -16,6 +17,7 @@
     "react": "16.x"
   },
   "devDependencies": {
+    "react-test-renderer": "16.x",
     "rollup": "3.x"
   }
 }

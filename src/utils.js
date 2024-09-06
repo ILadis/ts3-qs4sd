@@ -1,10 +1,10 @@
 
 export function sleep(millis) {
-  return new Promise(resolve => window.setTimeout(resolve, millis));
+  return new Promise(resolve => setTimeout(resolve, millis));
 }
 
 export function dispatch(action) {
-  window.setTimeout(action, 0);
+  setTimeout(action, 0);
 }
 
 export function retry(action, times = 3) {
@@ -32,7 +32,7 @@ export function debounce(action, millis = 200) {
 
   async function invoke() {
     if (queue.length == 0) {
-      window.clearInterval(handle);
+      clearInterval(handle);
       handle = null;
     } else {
       let [thisArg, argArray] = queue[0];
@@ -49,7 +49,7 @@ export function debounce(action, millis = 200) {
     queue.push([this, arguments]);
 
     if (handle == null) {
-      handle = window.setInterval(invoke, millis);
+      handle = setInterval(invoke, millis);
       invoke();
     }
   }
@@ -72,7 +72,7 @@ export function generate() {
 }
 
 export async function fətch(request) {
-  let response = await window.fetch(request);
+  let response = await fetch(request);
   if (!response.ok) {
     throw response;
   }

@@ -60,7 +60,7 @@ export function TS3BookmarkList(props) {
 
   return (
     $(PanelSection, { title: 'SERVERS' }, bookmarks.map(bookmark =>
-      $(PanelSectionRow, null,
+      $(PanelSectionRow, { key: bookmark.uuid },
         $(Field, { onClick: () => connectTo(bookmark), label: bookmark.name })),
       )
     )
@@ -80,7 +80,7 @@ export function TS3Dashboard(props) {
     $(PanelSection, { title: server.name },
       $(TS3DashboardActions, props),
       $(Focusable, null, channels.map(channel =>
-        $(PanelSectionRow, null, $(TS3ClientList, { channel, isSelfInChannel, joinChannel, setContent })))
+        $(PanelSectionRow, { key: channel.id }, $(TS3ClientList, { channel, isSelfInChannel, joinChannel, setContent })))
       )
     )
   );
@@ -103,17 +103,17 @@ export function TS3DashboardActions(props) {
   };
 
   return [
-    $(PanelSectionRow, null,
+    $(PanelSectionRow, { key: 0 },
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
         $(Focusable, { style },
           $(TS3IconButton, { onClick: () => toggleMute('input'), icon: $(TS3InputMuteIcon, { state: inputMuted }) }),
           $(TS3IconButton, { onClick: () => toggleMute('output'), icon: $(TS3OutputMuteIcon, { state: outputMuted }) }),
-          $(DialogButton, { onClick: () => disconnect(), className: 'compact-button' }, 'Disconnect'),
+          $(DialogButton,  { onClick: () => disconnect(), className: 'compact-button' }, 'Disconnect'),
           $(TS3IconButton, { onClick: () => setContent('settings'), icon: $(TS3SettingsIcon) }),
         )
       )
     ),
-    $(PanelSectionRow, null,
+    $(PanelSectionRow, { key: 1 },
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
         $(DialogButton, { onClick: () => setContent('browser') }, 'Channel Browser')
       )
