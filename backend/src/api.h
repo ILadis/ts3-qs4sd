@@ -9,7 +9,7 @@
 #define HTTP_JSON_BOOKMARK  "\"name\":%m,\"uuid\":%m"
 #define HTTP_JSON_CLIENT    "\"client_id\":%lu,\"client_nickname\":%m,\"input_muted\":%s,\"output_muted\":%s"
 #define HTTP_JSON_PTT_STATE "\"ptt_state\":%m,\"ptt_hotkey\":%m"
-#define HTTP_JSON_CHANNEL   "\"channel_id\":%lu,\"channel_name\":%m,\"channel_order\":%lu,\"channel_max_clients\":%lu,\"channel_has_password\":%s"
+#define HTTP_JSON_CHANNEL   "\"channel_id\":%lu,\"channel_name\":%m,\"channel_order\":%lu,\"channel_has_sub_channels\":%s,\"channel_has_password\":%s"
 
 // paudio json objects
 #define HTTP_JSON_AUDIO_OUTPUT "\"index\":%d,\"name\":%m,\"volume\":%g,\"muted\":%s"

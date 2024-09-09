@@ -98,14 +98,14 @@ components:
           type: string
           description: |
             Name of this TeamSpeak 3 channel.
-        channel_max_clients:
-          type: integer
+        channel_has_sub_channels:
+          type: boolean
           description: |
-            Maximum number of clients who can join this TeamSpeak 3 channel.
+            If this TeamSpeak 3 channel has any sub channels.
         channel_has_password:
           type: boolean
           description: |
-            If this TeamSpeak 3 channel is password protected or not.
+            If this TeamSpeak 3 channel is password protected.
     TS3ChannelWithClients:
       type: object
       properties:
@@ -117,14 +117,14 @@ components:
           type: string
           description: |
             Name of this TeamSpeak 3 channel.
-        channel_max_clients:
-          type: integer
+        channel_has_sub_channels:
+          type: boolean
           description: |
-            Maximum number of clients who can join this TeamSpeak 3 channel.
+            If this TeamSpeak 3 channel has any sub channels.
         channel_has_password:
           type: boolean
           description: |
-            If this TeamSpeak 3 channel is password protected or not.
+            If this TeamSpeak 3 channel is password protected.
         clients:
           type: array
           items:

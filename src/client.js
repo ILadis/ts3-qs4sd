@@ -275,7 +275,7 @@ Client.prototype.listChannels = async function() {
       channels.push(channel = {
         'id': Number(client['channel_id']),
         'name': String(client['channel_name']),
-        'maxClients': Number(client['channel_max_clients']),
+        'hasChannels': Number(client['channel_has_sub_channels']),
         'hasPassword': Boolean(client['channel_has_password']),
         'clients': Array(),
       });
@@ -347,7 +347,7 @@ Client.prototype.browseChannels = async function() {
       'id': Number(channel['channel_id']),
       'name': String(channel['channel_name']),
       'order': Number(channel['channel_order']),
-      'maxClients': Number(channel['channel_max_clients']),
+      'hasChannels': Number(channel['channel_has_sub_channels']),
       'hasPassword': Boolean(channel['channel_has_password']),
     });
   }

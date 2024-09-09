@@ -75,11 +75,11 @@ static void TS3Channel_reset(struct TS3Channel *channel) {
   channel->id = 0;
   channel->order = 0;
   channel->hasPassword = false;
-  channel->maxClients = 0;
+  channel->hasChannels = false;
   TS3Remote_freeMemory((void **) &channel->name);
 }
 
-static void TS3Channel_update(struct TS3Channel *channel, uint64 id, struct TS3Remote* remote) {
+static void TS3Channel_update(struct TS3Channel *channel, uint64 id, uint64 *channelIds, struct TS3Remote* remote) {
   struct TS3Functions *ts3 = ts3plugin_getFunctionPointers();
 
   TS3Channel_reset(channel);
@@ -93,7 +93,16 @@ static void TS3Channel_update(struct TS3Channel *channel, uint64 id, struct TS3R
     ts3->getChannelVariableAsString(remote->handle, channel->id, CHANNEL_NAME, &channel->name);
     ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_ORDER, &channel->order);
     ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_FLAG_PASSWORD, (int *) &channel->hasPassword);
-    ts3->getChannelVariableAsInt(remote->handle, channel->id, CHANNEL_MAXCLIENTS, &channel->maxClients);
+  }
+
+  for (int i = 0; channelIds[i]; i++) {
+    uint64 parentChannelId = 0;
+    ts3->getParentChannelOfChannel(remote->handle, channelIds[i], &parentChannelId);
+
+    if (parentChannelId == id) {
+      channel->hasChannels = true;
+      break;
+    }
   }
 }
 
@@ -234,6 +243,9 @@ void TS3Remote_updateClientList(struct TS3Remote *remote) {
   TS3Remote_resetClientList(remote);
   TS3Remote_guardHandleIsset(remote);
 
+  uint64 *channelIds = NULL;
+  ts3->getChannelList(remote->handle, &channelIds);
+
   anyID *clientIds = NULL;
   ts3->getClientList(remote->handle, &clientIds);
 
@@ -245,9 +257,10 @@ void TS3Remote_updateClientList(struct TS3Remote *remote) {
     ts3->getChannelOfClient(remote->handle, clientIds[i], &channelId);
 
     TS3Client_update(&list->items[i].client, clientIds[i], remote);
-    TS3Channel_update(&list->items[i].channel, channelId, remote);
+    TS3Channel_update(&list->items[i].channel, channelId, channelIds, remote);
   }
 
+  TS3Remote_freeMemory((void **) &channelIds);
   TS3Remote_freeMemory((void **) &clientIds);
 }
 
@@ -349,11 +362,15 @@ void TS3Remote_setCursorToChannel(struct TS3Remote *remote, uint64 channelId) {
   struct TS3Channel *channel = &cursor->channel;
 
   TS3Remote_resetCursor(remote);
-  TS3Channel_update(channel, channelId, remote);
   TS3Remote_guardHandleIsset(remote);
 
+  uint64 *channelIds = NULL;
+  ts3->getChannelList(remote->handle, &channelIds);
+
   anyID *clientIds = NULL;
-  ts3->getChannelClientList(remote->handle, channel->id, &clientIds);
+  ts3->getClientList(remote->handle, &clientIds);
+
+  TS3Channel_update(channel, channelId, channelIds, remote);
 
   cursor->numClients = 0;
   for (int i = 0; clientIds[i] && i < length(cursor->clients); i++) {
@@ -361,6 +378,7 @@ void TS3Remote_setCursorToChannel(struct TS3Remote *remote, uint64 channelId) {
     TS3Client_update(&cursor->clients[i], clientIds[i], remote);
   }
 
+  TS3Remote_freeMemory((void **) &channelIds);
   TS3Remote_freeMemory((void **) &clientIds);
 }
 
@@ -422,17 +440,17 @@ void TS3Remote_setBrowserToChannel(struct TS3Remote *remote, uint64 channelId) {
   struct TS3Browser *browser = &remote->browser;
   struct TS3Channel *channel = &browser->channel;
 
+  TS3Remote_resetBrowser(remote);
   TS3Remote_guardHandleIsset(remote);
 
   if (channelId == -1) {
     ts3->getParentChannelOfChannel(remote->handle, channel->id, &channelId);
   }
 
-  TS3Remote_resetBrowser(remote);
-  TS3Channel_update(channel, channelId, remote);
-
   uint64 *channelIds = NULL;
   ts3->getChannelList(remote->handle, &channelIds);
+
+  TS3Channel_update(channel, channelId, channelIds, remote);
 
   browser->numChilds = 0;
   for (int i = 0, j = 0; channelIds[i] && j < length(browser->childs); i++) {
@@ -441,7 +459,7 @@ void TS3Remote_setBrowserToChannel(struct TS3Remote *remote, uint64 channelId) {
 
     if (parentChannelId == channelId) {
       browser->numChilds++;
-      TS3Channel_update(&browser->childs[j++], channelIds[i], remote);
+      TS3Channel_update(&browser->childs[j++], channelIds[i], channelIds, remote);
     }
   }
 

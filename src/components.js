@@ -195,7 +195,7 @@ export function TS3ChannelBrowser(props) {
   return (
     $(PanelSection, { title: 'CHANNEL BROWSER' }, browser.map((channel, index) =>
       $(Focusable, { onCancel: () => cancelAction() },
-        $(PanelSectionRow, { key: channel.id }, channel.maxClients <= 0
+        $(PanelSectionRow, { key: channel.id }, channel.hasChannels
           ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), icon: $(TS3ExpandMoreIcon) })
           : $(TS3ChannelField, { index, channel, onSubmit: () => joinAction(channel) })
         )

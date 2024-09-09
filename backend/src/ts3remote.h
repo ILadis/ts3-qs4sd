@@ -19,7 +19,7 @@ struct TS3Channel {
   char *name;
   int order;
   bool hasPassword;
-  int maxClients;
+  int hasChannels;
 };
 
 struct TS3Bookmark {

@@ -24,7 +24,7 @@ static void mg_handler_get_cursor_fn(
       mg_http_api_response(conn, "200 OK", "application/json");
       mg_http_printf_json_chunk(conn, "%s", "{" HTTP_JSON_CHANNEL ",\"clients\":[",
           mg_json_number(channel->id), mg_json_string(channel->name), mg_json_number(channel->order),
-          mg_json_number(channel->maxClients), mg_json_bool(channel->hasPassword));
+          mg_json_bool(channel->hasChannels), mg_json_bool(channel->hasPassword));
 
       for (int i = 0; i < cursor->numClients; i++) {
         mg_http_printf_json_chunk(conn, i ? ", %s" : "%s", "{" HTTP_JSON_CLIENT "}",
