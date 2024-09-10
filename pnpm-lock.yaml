@@ -14,7 +14,7 @@ dependencies:
 
 devDependencies:
   react-test-renderer:
-    specifier: '16'
+    specifier: 16.x
     version: 16.14.0(react@16.14.0)
   rollup:
     specifier: 3.x
