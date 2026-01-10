@@ -1,17 +1,17 @@
 
 # source and target files
-CFILES   := $(wildcard src/*.c) $(wildcard src/api/*.c)
-CFILES   += vnd/mongoose.c
+CFILES := $(wildcard src/*.c) $(wildcard src/api/*.c)
+CFILES += vnd/mongoose.c
 
-CFLAGS   := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
-CFLAGS   += `pkg-config --cflags --libs libpulse sqlite3 uuid`
+CFLAGS := -O2 -Wall -fPIC -include vnd/glibc_2.27.h -pthread
+CFLAGS += `pkg-config --cflags --libs libpulse sqlite3 uuid`
 
-TARGET   := ts3-qs4sd.so
+TARGET := ts3-qs4sd.so
 
 # toolchain and flags
-CC       := gcc
+CC     := gcc
 
-.PHONY : clean vendor run
+.PHONY: clean vendor run
 
 all: clean $(TARGET)
 	@mkdir -p out/
