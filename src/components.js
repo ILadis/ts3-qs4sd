@@ -317,7 +317,7 @@ export function TS3VolumeSettings(props) {
       })
     ),
     $(PanelSectionRow, null,
-      $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
+      $(Field, { childrenLayout: 'below', bottomSeparator: 'standard', className: 'compact-field' },
         $(TS3InputDevices, { inputs, changeCurrentInput })
       )
     )

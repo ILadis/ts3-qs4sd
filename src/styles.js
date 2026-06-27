@@ -60,6 +60,10 @@ export default `
   flex-shrink: 0;
 }
 
+.compact-field > * {
+  max-width: 100%;
+}
+
 .compact-button {
   min-width: 0 !important;
   padding-left: 0 !important;
