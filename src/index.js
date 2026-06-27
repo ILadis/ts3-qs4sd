@@ -15,6 +15,7 @@ export default definePlugin(serverAPI => {
 
   const locale = new Locale();
   locale.addTranslation('english', Strings.english);
+  locale.addTranslation('german', Strings.german);
 
   return {
     content: $(App, { client, locale }),

@@ -16,14 +16,11 @@ export const english = {
   'settings.headline': 'SETTINGS',
 
   'settings.volumes': 'Volumes',
-  'settings.volumes.description': ''
-    + 'View and change volumes of applications which are '
-    + 'playing back audio.',
+  'settings.volumes.description': 'View and change volumes of applications which are playing back audio.',
   'settings.volumes.toggle': (state) => state ? 'Show applications' : 'Hide applications',
 
   'settings.mic': 'Microphone',
-  'settings.mic.description': ''
-    + 'Select the active input device for TeamSpeak.',
+  'settings.mic.description': 'Select the active input device for TeamSpeak.',
 
   'settings.ptt': 'Push to Talk',
   'settings.ptt.rebind': (state) => state ? 'Press a button...' : 'Bind PTT hotkey',
@@ -37,4 +34,40 @@ export const english = {
   'password.headline': 'Enter Password',
   'password.ok': 'OK',
   'password.cancel': 'Cancel',
+};
+
+export const german = {
+  'setup.headline': 'EINRICHTEN',
+  'setup.instructions': ''
+    + 'TeamSpeak 3 ist nicht installiert. Wechsle zum Desktop und installiere '
+    + 'TeamSpeak 3 aus dem Discover Store. Füge anschließend alle TeamSpeak Server '
+    + 'als Favoriten hinzu, die du nutzen möchtest. Danach geht es hier weiter.',
+
+  'bookmarks.headline': 'SERVERS',
+  'browser.headline': 'CHANNELS',
+
+  'dashboard.actions.disconnect': 'Verlassen',
+  'dashboard.actions.browser': 'Channels',
+
+  'settings.headline': 'EINSTELLUNGEN',
+
+  'settings.volumes': 'Lautstärken',
+  'settings.volumes.description': 'Ändere die Lautstärke von Anwendungen.',
+  'settings.volumes.toggle': (state) => state ? 'Anzeigen' : 'Schließen',
+
+  'settings.mic': 'Aufnahme',
+  'settings.mic.description': 'Wechsle das Aufnahmegerät für TeamSpeak.',
+
+  'settings.ptt': 'Push to Talk',
+  'settings.ptt.rebind': (state) => state ? 'Button drücken...' : 'PTT Hotkey festlegen',
+  'settings.ptt.clear': 'PTT Hotkey zurücksetzen',
+
+  'settings.ptt.state.unavailable': 'Push to Talk ist nicht verfügbar, zusätzliche Einrichtungsschritte erforderlich.',
+  'settings.ptt.state.disabled': 'Push to Talk kann über die Hotkeys L/R 4-5 verwendet werden.',
+  'settings.ptt.state.rebinding': 'Drücke jetzt L/R 4-5 um einen Hotkey für Push to Talk festzulegen.',
+  'settings.ptt.state.active': (hotkey) => `Push to Talk is aktiviert und verwendet ${hotkey} als Hotkey.`,
+
+  'password.headline': 'Passwort eingeben',
+  'password.ok': 'OK',
+  'password.cancel': 'Abbrechen',
 };
