@@ -6,10 +6,10 @@
     "test": "node --test --experimental-test-module-mocks",
     "build": "rm -rf ./dist && rollup -c",
     "build:zip": "rm -rf plugin.zip && cd decky/plugins && zip -r ../../plugin.zip ts3-qs4sd",
-    "plugin:reload": "./plugin.reload.mjs",
-    "plugin:publish": "./plugin.publish.mjs",
+    "plugin:reload": "node ./plugin.reload.mjs",
+    "plugin:publish": "node ./plugin.publish.mjs",
     "docker:build": "docker build -f ./backend/Dockerfile -t ts3-qs4sd .",
-    "docker:run": "rm -rf ./backend/out && docker run -i -u 1000:1000 -v ./backend:/backend --rm ts3-qs4sd",
+    "docker:run": "rm -rf ./backend/out && docker run -i -u $(id -u):$(id -g) -v ./backend:/backend --rm ts3-qs4sd",
     "clean": "rm -rf ./dist ./backend/out ./backend/vnd"
   },
   "dependencies": {

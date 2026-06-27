@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
+    - name: Set up pnpm
+      run: npm install -g pnpm@9
+
+    - name: Set up Docker
+      uses: docker/setup-docker-action@v5
+
+    - name: Build plugin
+      run: |
+        pnpm install
+        pnpm run build
+        pnpm run docker:build
+        pnpm run docker:run
+        pnpm run build:zip
+    
+    - name: Publish plugin
+      run: pnpm run plugin:publish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
