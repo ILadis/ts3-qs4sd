@@ -2,22 +2,30 @@
 
 import plugin from './plugin.json' with { type: 'json' };
 
+const id = Date.now();
 const auth = new Request('http://localhost:1337/auth/token');
 
-var response = await fetch(auth);
+const response = await fetch(auth);
 const token = await response.text();
 
-const pluginName = encodeURIComponent(plugin.name);
+const call = {
+  'id': id, 'type': 0,
+  'route': 'loader/reload_plugin',
+  'args': [plugin.name],
+};
 
-const reload = new Request(`http://localhost:1337/plugins/${pluginName}/reload`, {
-  method: 'POST',
-  headers: { 'Authentication': token }
+const socket = new WebSocket('ws://localhost:1337/ws?auth=' + token);
+socket.addEventListener('open', () => socket.send(JSON.stringify(call)));
+
+socket.addEventListener('message', (event) => {
+  const reply = JSON.parse(event.data);
+  if (reply.id !== call.id) return;
+
+  if ('error' in reply) {
+    console.log(`Failed to reload plugin: ${plugin.name}`);
+  } else {
+    console.log(`Plugin successfully reloaded: ${plugin.name}`);
+  }
+
+  socket.close();
 });
-
-var response = await fetch(reload);
-
-if (response.status == 200) {
-  console.log(`Plugin successfully reloaded: ${pluginName}`);
-} else {
-  console.log(`Failed to reload plugin: ${pluginName}`);
-}
