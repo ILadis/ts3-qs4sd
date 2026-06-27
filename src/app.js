@@ -4,7 +4,7 @@ import { createElement as $, useState, useEffect } from 'react';
 import { TS3QuickAccessPanel, TS3ChannelPasswordPrompt } from './components.js';
 import { retry } from './utils.js'
 
-export function App({ client }) {
+export function App({ client, locale }) {
   const [content, setContent] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [server, setServer] = useState(null);
@@ -14,6 +14,12 @@ export function App({ client }) {
   const [self, setSelf] = useState(null);
   const [outputs, setOutputs] = useState([]);
   const [inputs, setInputs] = useState([]);
+
+  function translate(key, ...args) {
+    const [text, setText] = useState('');
+    locale.translate(key, ...args).then(setText);
+    return text;
+  }
 
   function connectTo(bookmark) {
     client.connect(bookmark.uuid);
@@ -38,7 +44,7 @@ export function App({ client }) {
 
   async function joinChannel(channel) {
     if (channel.hasPassword) {
-      var password = await TS3ChannelPasswordPrompt.show();
+      var password = await TS3ChannelPasswordPrompt.show(translate);
     }
 
     await client.moveCursor(channel);
@@ -208,6 +214,7 @@ export function App({ client }) {
       inputs,
       // actions
       setContent,
+      translate,
       connectTo,
       isSelfInChannel,
       joinChannel,

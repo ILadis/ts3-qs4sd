@@ -37,16 +37,15 @@ export function TS3QuickAccessPanel(props) {
   );
 }
 
-export function TS3SetupHints() {
+export function TS3SetupHints(props) {
+  const {
+    translate: t,
+  } = props;
+
   return (
     $(PanelSection, null,
       $(PanelSectionRow, null,
-        $(Field, { label: 'SETUP' }, ''
-          + 'TeamSpeak 3 is not installed. Please switch to desktop mode and '
-          + 'download TeamSpeak 3 from the Discover store. Make sure to add '
-          + 'all TeamSpeak servers you want to connect to as bookmarks. '
-          + 'Then come back here.'
-        ),
+        $(Field, { label: t('setup.headline') }, t('setup.instructions')),
       )
     )
   );
@@ -54,12 +53,13 @@ export function TS3SetupHints() {
 
 export function TS3BookmarkList(props) {
   const {
+    translate: t,
     bookmarks,
     connectTo,
   } = props;
 
   return (
-    $(PanelSection, { title: 'SERVERS' }, bookmarks.map(bookmark =>
+    $(PanelSection, { title: t('bookmarks.headline') }, bookmarks.map(bookmark =>
       $(PanelSectionRow, { key: bookmark.uuid },
         $(Field, { onClick: () => connectTo(bookmark), label: bookmark.name })),
       )
@@ -80,7 +80,9 @@ export function TS3Dashboard(props) {
     $(PanelSection, { title: server.name },
       $(TS3DashboardActions, props),
       $(Focusable, null, channels.map(channel =>
-        $(PanelSectionRow, { key: channel.id }, $(TS3ClientList, { channel, isSelfInChannel, joinChannel, setContent })))
+        $(PanelSectionRow, { key: channel.id },
+          $(TS3ClientList, { channel, isSelfInChannel, joinChannel, setContent }))
+        )
       )
     )
   );
@@ -89,6 +91,7 @@ export function TS3Dashboard(props) {
 export function TS3DashboardActions(props) {
   const {
     self,
+    translate: t,
     toggleMute,
     setContent,
     disconnect,
@@ -108,14 +111,14 @@ export function TS3DashboardActions(props) {
         $(Focusable, { style },
           $(TS3IconButton, { onClick: () => toggleMute('input'), icon: $(TS3InputMuteIcon, { state: inputMuted }) }),
           $(TS3IconButton, { onClick: () => toggleMute('output'), icon: $(TS3OutputMuteIcon, { state: outputMuted }) }),
-          $(DialogButton,  { onClick: () => disconnect(), className: 'compact-button' }, 'Disconnect'),
+          $(DialogButton,  { onClick: () => disconnect(), className: 'compact-button' }, t('dashboard.actions.disconnect')),
           $(TS3IconButton, { onClick: () => setContent('settings'), icon: $(TS3SettingsIcon) }),
         )
       )
     ),
     $(PanelSectionRow, { key: 1 },
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
-        $(DialogButton, { onClick: () => setContent('browser') }, 'Channel Browser')
+        $(DialogButton, { onClick: () => setContent('browser') }, t('dashboard.actions.browser'))
       )
     )
   ];
@@ -175,6 +178,7 @@ export function TS3ClientAvatar({ client }) {
 
 export function TS3ChannelBrowser(props) {
   const {
+    translate: t,
     browser,
     browseChannels,
     isBrowserOnRoot,
@@ -193,7 +197,7 @@ export function TS3ChannelBrowser(props) {
     : joinChannel(channel);
 
   return (
-    $(PanelSection, { title: 'CHANNEL BROWSER' }, browser.map((channel, index) =>
+    $(PanelSection, { title: t('browser.headline') }, browser.map((channel, index) =>
       $(Focusable, { onCancel: () => cancelAction() },
         $(PanelSectionRow, { key: channel.id }, channel.hasChannels
           ? $(TS3ChannelField, { index, channel, onSubmit: () => browseChannels(channel), icon: $(TS3ExpandMoreIcon) })
@@ -226,6 +230,7 @@ function TS3ChannelField(props) {
 
 export function TS3ChannelPasswordPrompt(props) {
   const {
+    translate: t,
     resolve,
     reject,
     closeModal,
@@ -240,15 +245,15 @@ export function TS3ChannelPasswordPrompt(props) {
 
   return (
     $(ModalRoot, { closeModal: () => reject() },
-      $(DialogHeader, null, 'Enter Password'),
+      $(DialogHeader, null, t('password.headline')),
       $(DialogBody, null,
         $(TextField, { type: 'password', onChange: (input) => password = input.target.value })
       ),
       $(DialogFooter, null,
         $(Field, { childrenLayout: 'below', bottomSeparator: 'none', highlightOnFocus: false },
           $(Focusable, { style, onCancel: () => (reject(), closeModal()) },
-            $(DialogButton, { onClick: () => (resolve(password), closeModal()) }, 'OK'),
-            $(DialogButton, { onClick: () => (reject(), closeModal()) }, 'Cancel'),
+            $(DialogButton, { onClick: () => (resolve(password), closeModal()) }, t('password.ok')),
+            $(DialogButton, { onClick: () => (reject(), closeModal()) }, t('password.cancel')),
           )
         )
       )
@@ -256,13 +261,14 @@ export function TS3ChannelPasswordPrompt(props) {
   );
 }
 
-TS3ChannelPasswordPrompt.show = function() {
-  return new Promise((resolve, reject) => showModal($(TS3ChannelPasswordPrompt, { resolve, reject })));
+TS3ChannelPasswordPrompt.show = function(translate) {
+  return new Promise((resolve, reject) => showModal($(TS3ChannelPasswordPrompt, { translate, resolve, reject })));
 };
 
 export function TS3Settings(props) {
   const {
     self,
+    translate: t,
     outputs,
     outputChanged,
     toggleOutputs,
@@ -276,10 +282,10 @@ export function TS3Settings(props) {
   const onCancel = () => setContent('dashboard');
 
   return (
-    $(PanelSection, { title: 'SETTINGS' },
+    $(PanelSection, { title: t('settings.headline') },
       $(Focusable, { onCancel },
-        $(TS3VolumeSettings, { outputs, outputChanged, toggleOutputs, inputs, changeCurrentInput }),
-        $(TS3PttSettings, { self, rebindPttHotkey, clearPttHotkey }),
+        $(TS3VolumeSettings, { translate: t, outputs, outputChanged, toggleOutputs, inputs, changeCurrentInput }),
+        $(TS3PttSettings, { self, translate: t, rebindPttHotkey, clearPttHotkey }),
       )
     )
   );
@@ -287,6 +293,7 @@ export function TS3Settings(props) {
 
 export function TS3VolumeSettings(props) {
   const {
+    translate: t,
     outputs,
     outputChanged,
     toggleOutputs,
@@ -296,25 +303,18 @@ export function TS3VolumeSettings(props) {
 
   return [
     $(PanelSectionRow, null,
-      $(Field, { label: 'Volumes', bottomSeparator: 'none', description: ''
-        + 'View and change volumes of applications which are '
-        + 'playing back audio.'
-      })
+      $(Field, { label: t('settings.volumes'), bottomSeparator: 'none', description: t('settings.volumes.description') })
     ),
     $(PanelSectionRow, null,
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
-        $(DialogButton, { onClick: () => toggleOutputs() }, outputs.length <= 0
-          ? 'Show applications' : 'Hide applications'
-        )
+        $(DialogButton, { onClick: () => toggleOutputs() }, t('settings.volumes.toggle', outputs.length <= 0))
       )
     ),
     $(Focusable, null, outputs.map(output =>
       $(PanelSectionRow, null, $(TS3OutputDevice, { output, outputChanged })))
     ),
     $(PanelSectionRow, null,
-      $(Field, { label: 'Microphone', bottomSeparator: 'none', description: ''
-        + 'Select the active input device for TeamSpeak.'
-      })
+      $(Field, { label: t('settings.mic'), bottomSeparator: 'none', description: t('settings.mic.description') })
     ),
     $(PanelSectionRow, null,
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard', className: 'compact-field' },
@@ -357,6 +357,7 @@ export function TS3InputDevices(props) {
 export function TS3PttSettings(props) {
   const {
     self,
+    translate: t,
     rebindPttHotkey,
     clearPttHotkey,
   } = props;
@@ -364,13 +365,6 @@ export function TS3PttSettings(props) {
   const state = self.ptt.state;
   const rebind = state == 'rebinding';
   const disabled = state == 'unavailable';
-
-  const hint = {
-    'unavailable': 'Push to Talk is unavailable, additional setup is required.',
-    'disabled':    'Push to Talk can be enabled by selecting L/R 4-5 as a hotkey button.',
-    'rebinding':   'Press L/R 4-5 now to select a button as a hotkey for Push to Talk.',
-    'active':      `Push to Talk is enabled and bound to hotkey button ${self.ptt.hotkey}.`,
-  };
 
   const style = {
     'display': 'flex',
@@ -380,13 +374,13 @@ export function TS3PttSettings(props) {
 
   return [
     $(PanelSectionRow, null,
-      $(Field, { label: 'Push to Talk', bottomSeparator: 'none', description: hint[state] })
+      $(Field, { label: t('settings.ptt'), bottomSeparator: 'none', description: t(`settings.ptt.state.${state}`, self.ptt.hotkey) })
     ),
     $(PanelSectionRow, null,
       $(Field, { childrenLayout: 'below', bottomSeparator: 'standard' },
         $(Focusable, { style },
-          $(DialogButton, { onClick: () => rebindPttHotkey(), disabled }, rebind ? 'Press a button...' : 'Bind PTT hotkey'),
-          $(DialogButton, { onClick: () => clearPttHotkey(), disabled }, 'Clear PTT hotkey'),
+          $(DialogButton, { onClick: () => rebindPttHotkey(), disabled }, t('settings.ptt.rebind', rebind)),
+          $(DialogButton, { onClick: () => clearPttHotkey(), disabled }, t('settings.ptt.clear')),
         )
       )
     )
