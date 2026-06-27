@@ -16,9 +16,7 @@ export function App({ client, locale }) {
   const [inputs, setInputs] = useState([]);
 
   function translate(key, ...args) {
-    const [text, setText] = useState('');
-    locale.translate(key, ...args).then(setText);
-    return text;
+    return locale.translate(key, ...args);
   }
 
   function connectTo(bookmark) {
@@ -137,6 +135,7 @@ export function App({ client, locale }) {
   }
 
   async function restoreState() {
+    await locale.detectLanguage();
     const status = await client.getStatus();
 
     if (status.installed) {

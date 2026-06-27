@@ -1,7 +1,6 @@
 
 export function Locale() {
   this.translations = new Map();
-  this.language = this.detectLanguage();
   this.fallback = false;
 }
 
@@ -12,7 +11,7 @@ Locale.prototype.detectLanguage = async function() {
     var language = await settings.GetCurrentLanguage();
   }
 
-  return language;
+  this.language = language;
 };
 
 Locale.prototype.addTranslation = function(language, translations) {
@@ -23,8 +22,14 @@ Locale.prototype.addTranslation = function(language, translations) {
   }
 };
 
-Locale.prototype.translate = async function(key, ...args) {
-  let translations = this.translations.get(await this.language);
+Locale.prototype.translate = function(key, ...args) {
+  let language = this.language;
+
+  if (!this.translations.has(language)) {
+    language = this.fallback;
+  }
+
+  let translations = this.translations.get(language);
   let fallback = this.translations.get(this.fallback);
 
   let translation = key in translations ? translations[key] : fallback[key];
