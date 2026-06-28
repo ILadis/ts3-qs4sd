@@ -14,7 +14,7 @@ bool PAudio_task() {
   }
 
   if (once) {
-    Logger_debugLog("Connected to Pulse Audio server");
+    Logger_debugLog("Connected to Pulse Audio server, starting loop task...");
     once = false;
   }
 
@@ -36,7 +36,7 @@ bool SDInput_task() {
   }
 
   if (once) {
-    Logger_debugLog("Opened Steam Deck input device");
+    Logger_debugLog("Opened Steam Deck input device, starting poll task...");
     once = false;
   }
 

@@ -3,8 +3,36 @@
 #include "log.h"
 
 struct SDInput* SDInput_getInstance() {
-  static struct SDInput input = {0};
+  static struct SDInput input = {
+    .verbose = false,
+    .device = {
+      .vendor = 0x28DE,
+      .product = 0x1205,
+      .ifacenum = 2,
+    }
+  };
+
   return &input;
+}
+
+bool SDInput_useDevice(
+    struct SDInput *input,
+    short vendor, short product,
+    unsigned int ifacenum)
+{
+  // can not change device when it's already opened
+  if (input->fd > 0) {
+    return false;
+  }
+
+  input->device.vendor = vendor;
+  input->device.product = product;
+  input->device.ifacenum = ifacenum;
+
+  // enables verbose buffer logging
+  input->verbose = true;
+
+  return true;
 }
 
 static int SDInput_openDeviceIfMatches(
@@ -14,6 +42,7 @@ static int SDInput_openDeviceIfMatches(
 {
   int fd = open(path, O_RDWR|O_NONBLOCK);
   if (fd <= 0) {
+    Logger_debugLog("Failed to open device file: %s", path);
     goto error;
   }
 
@@ -21,7 +50,7 @@ static int SDInput_openDeviceIfMatches(
   ioctl(fd, HIDIOCGRAWINFO, &dev);
 
   if (dev.vendor != device->vendor || dev.product != device->product) {
-    Logger_debugLog("Device %s does not match Steam Deck input vid/pid (is %hd/%hd)", path, dev.vendor, dev.product);
+    Logger_debugLog("Device file %s does not match input vid/pid (%04hX/%04hX)", path, dev.vendor, dev.product);
     goto error;
   }
 
@@ -33,10 +62,11 @@ static int SDInput_openDeviceIfMatches(
 
   int offset = strlen(rawphys) - strlen(ifacename);
   if (offset < 0  || strcmp(&rawphys[offset], ifacename) != 0) {
-    Logger_debugLog("Device %s does not match Steam Deck input physical location (is %s)", path, rawphys);
+    Logger_debugLog("Device file %s does not match input physical location (%s)", path, rawphys);
     goto error;
   }
 
+  Logger_debugLog("Opened device file %s with matching input vid/pid (%04hX/%04hX) and physical location (%s) for polling", path, dev.vendor, dev.product, rawphys);
   return fd;
 
 error:
@@ -45,9 +75,9 @@ error:
 }
 
 bool SDInput_tryOpenDevice(struct SDInput *input) {
-  const struct hidraw_devinfo device = {
-    .vendor = 0x28DE,
-    .product = 0x1205,
+  struct hidraw_devinfo device = {
+    .vendor = input->device.vendor,
+    .product = input->device.product,
   };
 
   // don't try to reopen device
@@ -59,7 +89,7 @@ bool SDInput_tryOpenDevice(struct SDInput *input) {
   for (int index = 0; index < 255; index++) {
     snprintf(path, sizeof(path), "/dev/hidraw%d", index);
 
-    int fd = SDInput_openDeviceIfMatches(path, &device, 2);
+    int fd = SDInput_openDeviceIfMatches(path, &device, input->device.ifacenum);
     if (fd > 0) {
       input->fd = fd;
       return true;
@@ -82,6 +112,47 @@ void SDInput_closeDevice(struct SDInput *input) {
   input->previous = buttons;
 }
 
+static void SDInput_logBuffer(
+    struct SDInput *input,
+    unsigned char *data, int length,
+    bool success)
+{
+  if (!input->verbose) {
+    return;
+  }
+
+  static int previous = -1;
+  int current = 0;
+  for (int i = 0; i < length; i++) {
+    current ^= data[i];
+  }
+
+  if (previous == current) {
+    return;
+  }
+
+  char dump[55] = {0};
+  Logger_debugLog("%s", success ? "Device file was polled successful" : "Failed to poll from device file");
+
+  for (int i = 0; i < length; i += 16) {
+    char *buffer = dump;
+    buffer += sprintf(buffer, "%04X  ", i);
+
+    for (int j = 0; j < 16; j++) {
+      if (i + j < length) {
+        buffer += sprintf(buffer, "%02X ", data[i + j]);
+      }
+      if (j == 7) {
+        buffer += sprintf(buffer, " ");
+      }
+    }
+
+    Logger_debugLog("%s", dump);
+  }
+
+  previous = current;
+}
+
 bool SDInput_pollState(struct SDInput *input) {
   int fd = input->fd;
   if (fd <= 0) {
@@ -94,16 +165,15 @@ bool SDInput_pollState(struct SDInput *input) {
   struct pollfd pfd = { .fd = fd, .events = POLLIN };
   int result = poll(&pfd, 1, timeout);
   if (result <= 0) {
-    return false;
+    goto error;
   }
 
   int length = read(fd, data, sizeof(data));
   if (length != sizeof(data)) {
-    return false;
+    goto error;
   }
 
   struct SDButtons buttons = {0};
-
   buttons.keys[SDINPUT_KEY_A]  = (data[ 8] & 0b10000000) > 0;
   buttons.keys[SDINPUT_KEY_X]  = (data[ 8] & 0b01000000) > 0;
   buttons.keys[SDINPUT_KEY_B]  = (data[ 8] & 0b00100000) > 0;
@@ -124,7 +194,12 @@ bool SDInput_pollState(struct SDInput *input) {
 
   sdinput_onUpdate(input);
 
+  SDInput_logBuffer(input, data, sizeof(data), true);
   return true;
+
+error:
+  SDInput_logBuffer(input, data, sizeof(data), false);
+  return false;
 }
 
 bool SDInput_isKeyHeld(

@@ -35,12 +35,21 @@ enum SDInputKey {
 
 struct SDInput {
   int fd;
+  bool verbose;
+
+  struct SDDevice {
+    short vendor;
+    short product;
+    unsigned int ifacenum;
+  } device;
+
   struct SDButtons {
     bool keys[SDINPUT_KEY_COUNT];
   } current, previous;
 };
 
 struct SDInput* SDInput_getInstance();
+bool SDInput_useDevice(struct SDInput *input, short vendor, short product, unsigned int ifacenum);
 
 bool SDInput_tryOpenDevice(struct SDInput *input);
 void SDInput_closeDevice(struct SDInput *input);

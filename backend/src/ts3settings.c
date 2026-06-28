@@ -42,22 +42,35 @@ void TS3Settings_load(struct TS3Remote *remote) {
   while (SDInputKey_byId(&key, id)) {
     const char *name = SDInputKey_getName(key);
     if (strncmp(settings.pttHotkey, name, sizeof(settings.pttHotkey)) == 0) {
-      Logger_debugLog("Restored PTT hotkey from settings: %ld", key);
       TS3Remote_setPttHotkey(remote, id);
+      Logger_debugLog("Restored PTT hotkey from settings: %ld", key);
       break;
     }
     else id++;
+  }
+
+  struct SDInput *input = SDInput_getInstance();
+  if (settings.hidVendorId != 0 || settings.hidProductId != 0) {
+    SDInput_useDevice(input, settings.hidVendorId, settings.hidProductId, settings.hidIfaceNum);
+    Logger_debugLog("Using PTT device from settings: %04hX:%04hX:%1u",
+        settings.hidVendorId,
+        settings.hidProductId,
+        settings.hidIfaceNum);
   }
 }
 
 void TS3Settings_save(struct TS3Remote *remote) {
   struct TS3Settings settings = {0};
+
   const char *config = TS3Settings_getFilepath();
+  TS3Settings_readFrom(&settings, config);
 
   enum SDInputKey key;
   if (SDInputKey_byId(&key, remote->pttHotkey)) {
     const char *name = SDInputKey_getName(key);
     snprintf(settings.pttHotkey, sizeof(settings.pttHotkey), "%s", name);
+  } else {
+    settings.pttHotkey[0] = '\0';
   }
 
   TS3Settings_writeTo(&settings, config);
@@ -70,12 +83,18 @@ bool TS3Settings_readFrom(struct TS3Settings *settings, const char *path) {
     return false;
   }
 
+  memset(settings, 0, sizeof(*settings));
+
   char buffer[1024] = {0};
   int size = fread(buffer, sizeof(char), length(buffer), file);
   Logger_debugLog("Read settings: %s", buffer);
 
   struct mg_str json = mg_str_n(buffer, size);
-  TS3Settings_fromJson(json, "$.ptt_hotkey", settings->pttHotkey);
+  mg_json_get_string(json, "$.ptt_hotkey", settings->pttHotkey, sizeof(settings->pttHotkey));
+
+  char device[12] = {0};
+  mg_json_get_string(json, "$.ptt_device", device, sizeof(device));
+  sscanf(device, "%4hx:%4hx:%1u", &settings->hidVendorId, &settings->hidProductId, &settings->hidIfaceNum);
 
   fclose(file);
   return true;
@@ -91,10 +110,16 @@ bool TS3Settings_writeTo(struct TS3Settings *settings, const char *path) {
   char buffer[1024] = {0};
   const char json[] = ""
     "{"
-      "\"ptt_hotkey\":%m"
+      "\"ptt_hotkey\":%m,"
+      "\"ptt_device\":\"%04hX:%04hX:%1u\""
     "}";
 
-  size_t size = mg_snprintf(buffer, sizeof(buffer), json, mg_json_string(settings->pttHotkey));
+  size_t size = mg_snprintf(buffer, sizeof(buffer), json,
+      mg_json_string(settings->pttHotkey),
+      mg_json_number(settings->hidVendorId),
+      mg_json_number(settings->hidProductId),
+      mg_json_number(settings->hidIfaceNum));
+
   fwrite(buffer, sizeof(char), size, file);
   Logger_debugLog("Wrote settings: %s", buffer);
 
