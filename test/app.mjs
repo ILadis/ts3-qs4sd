@@ -56,8 +56,13 @@ describe('App', async () => {
       }
     };
 
+    const locale = {
+      detectLanguage: () => Promise.resolve(),
+      translate: (key) => key,
+    };
+
     // act
-    const renderer = ReactTestRenderer.create($(App, { client }));
+    const renderer = ReactTestRenderer.create($(App, { client, locale }));
     await ReactTestRenderer.act(() => awaitListener);
 
     // assert
@@ -90,8 +95,13 @@ describe('App', async () => {
       }
     };
 
+    const locale = {
+      detectLanguage: () => Promise.resolve(),
+      translate: (key) => key,
+    };
+
     // act
-    const renderer = ReactTestRenderer.create($(App, { client }));
+    const renderer = ReactTestRenderer.create($(App, { client, locale }));
     await ReactTestRenderer.act(() => awaitListener);
 
     const field = renderer.root.findByProps({ label: bookmark2.name });
@@ -125,8 +135,13 @@ describe('App', async () => {
       }
     };
 
+    const locale = {
+      detectLanguage: () => Promise.resolve(),
+      translate: (key) => key,
+    };
+
     // act
-    const renderer = ReactTestRenderer.create($(App, { client }));
+    const renderer = ReactTestRenderer.create($(App, { client, locale }));
     await ReactTestRenderer.act(() => awaitListener);
 
     // assert
@@ -159,8 +174,13 @@ describe('App', async () => {
       }
     };
 
+    const locale = {
+      detectLanguage: () => Promise.resolve(),
+      translate: (key) => key,
+    };
+
     // act
-    const renderer = ReactTestRenderer.create($(App, { client }));
+    const renderer = ReactTestRenderer.create($(App, { client, locale }));
     await ReactTestRenderer.act(() => awaitListener);
 
     const actions = renderer.root.findByType(TS3DashboardActions);

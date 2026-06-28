@@ -17,8 +17,8 @@ import {
   showModal,
 } from 'decky-frontend-lib';
 
-import * as Icons from './icons';
-import styles from './styles';
+import * as Icons from './icons.js';
+import styles from './styles.js';
 
 export function TS3QuickAccessPanel(props) {
   const content = ({
